@@ -13,28 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-process DumpXrefFile {
+process BuildFeatureSequence {
 
-  debug 'ture'
+  debug 'true'
   label 'mem20GB'
-  tag "${db_name[0]}-dump_xref"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name[1]}", mode: 'copy'
+  tag "${db_name}-feature_sequence_build"
+  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
 
-  input:
+  input: 
   each db_name
+  path output_dir
+  path top_level_dir
 
   output:
   stdout
-  path "xref.tsv"
+  path "${output_dir}"
+  path "${top_level_dir}"
+  path "${db_name}/${params.feature_seq_dir}"
 
+
+  //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
+  //Dont change it until it complies with fasta dump
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
-
-  ${params.nf_py_script_path}file_dump/dump_xref.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name[0]} && echo -n ${db_name}
-
+  ${params.nf_py_script_path}file_dump/feature_sequence_build.py --base_dir=${BASE_DIR}\
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --top_level_seq ${top_level_dir} --output_dir ${db_name}/${params.feature_seq_dir} && echo -n ${db_name}
   """
-
 }

@@ -72,48 +72,6 @@ class ExonSparkService:
         return file_service.write_df_to_orc(exons, "exons", tmp_folder)
 
     """
-    Dumps sequence to csv file, that allows to process sequence effictefly in
-    parralel. Reading from database is done with SQLALchemy, so conn is SQL
-    alchemy object. CSV file has two colums - coord and letter of
-    sequence. If folder is not empty - it is removedbefore dump.
-    """
-    def create_seq_file(self, conn, seq_id, max_overlap: int, tmp_folder=None):
-        # Select sequence from dna table
-        if (max_overlap == None):
-            max_overlap = 0
-        query = text("SELECT sequence FROM dna WHERE seq_region_id=" + seq_id)
-        exe = conn.execute(query)
-        results = exe.scalars().all()
-        if (tmp_folder == None):
-            tmp_folder = "tmp/"
-        # Create folder for csv file
-        shutil.rmtree(tmp_folder + seq_id, ignore_errors=True)
-        if (os.path.exists(tmp_folder) == False):
-            os.mkdir(tmp_folder)
-        os.mkdir(tmp_folder + seq_id)
-
-        # In loop write every letter in new row. Every row is coord and dna letter 
-        if (len(results) > 0):
-            f = open(tmp_folder + seq_id + "/" + seq_id + ".csv", "w")
-            i = 0
-            j = 0
-            f.write("coord" + "," + "letter" + "\n")
-            for c in results[0]:
-                i = i + 1
-                f.write(str(i) + "," + c + "\n")
-            # For circulatr regions we need additional quarter-circle coordinates
-            j = i
-            for c in results[0]:
-                j = j + 1
-                f.write(str(i) + "," + c + "\n")
-                if (j > max_overlap):
-                    break
-            f.close()
-            return i
-        return None
-
-
-    """
     Returns a dataframe of translatable exons from database.
     Database URL example: jdbc:mysql://localhost:3306/ensembl_core_human_110
     //MUST BE TESTED, in transcript service there is similar func, but more info, that is tested
@@ -136,85 +94,75 @@ class ExonSparkService:
                 .orderBy("transcript_id", "rank")
         return exons
 
-
     """
     Returns exons dataframe with sequence column
     """
     def exons_with_seq(self, db: str, user: str, password: str,
-                       tmp_folder="tmp/"):
+                       top_level_seq, tmp_folder="tmp/"):
 
         exons_raw = self.load_exons_fs(db, user, password, tmp_folder)
         regions = self._spark.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select seq_region_id from transcript)tmp")\
+            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1)tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
         file_service = FileSystemSparkService(self._spark)
         regions = file_service.write_df_to_orc(regions, "regions", tmp_folder)
-        #We add to the end length of the region, if exon is curcular
-        @udf(returnType=StringType())
-        def adjust_end_circular(seq_region_start, seq_region_end,
-                                region_length):
-            if (seq_region_start > seq_region_end):
-                seq_region_end = seq_region_end + region_length
-            return seq_region_end
+
 
         # Using iterations on regions - because we really don't change
         # them, just use as index for dna table
-        url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
-        if (len(password) > 0):
-            url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
-        engine = sqlalchemy.create_engine(url)
         result = None
-        with engine.connect() as conn:
-            data_collect = regions.collect()
+        data_collect = regions.collect()
             # looping thorough each row of the regions dataframe
-            for row in data_collect:
+        for row in data_collect:
                 seq_id = str(row.seq_region_id)
-                query = text("SELECT sequence FROM dna WHERE seq_region_id=" + seq_id)
-                exe = conn.execute(query)
-                results = exe.scalars().all()
+                results = ""
+                try:
+                    f = open(top_level_seq + "/" + seq_id + ".txt", "r")
+                    results = f.read()
+                    f.close()
+                except OSError:
+                    pass             
                 if(len(results) == 0):
                     print(seq_id)
+                    print(top_level_seq + "/" + seq_id + ".txt")
                     continue
-                results = results[0]
                 # Here is an algorythm to concat dna sequnce from
                 # corresponding letters
-                if (results == None):
-                    continue
-                sequence_raw = results + results
+                sequence_raw = results.replace(" ", "")
                 #Reverse compliment sequence for -1 strand
                 @udf(returnType=StringType())
                 def reverse_compliment(strand, start, end):
-                    sequence = sequence_raw[int(start-1):int(end)].replace(" ", "")
+                    if (start > end):
+                        sequence = sequence_raw[int(start-1):] + sequence_raw[:int(end)]
+                    else:
+                        sequence = sequence_raw[int(start-1):int(end)]
                     if (strand == -1):
-                        #Reverce seq
+                        #Reverse seq
                         sequence = Seq(sequence)
                         sequence = sequence.reverse_complement()
                         return str(sequence)
                     return sequence
                 #For each exon we append region length, for circular seq
                 exonsDF = exons_raw.filter("seq_region_id=" +
-                                           seq_id).withColumn("region_length",\
-                                                              lit(len(results)))\
-                                           .withColumn("seq_region_end",\
-                                                            adjust_end_circular("seq_region_start",\
-                                                            "seq_region_end",\
-                                                             "region_length"))\
+                                           seq_id)\
                                            .withColumn("sequence",\
                                                     reverse_compliment("seq_region_strand",\
                                                    "seq_region_start",\
                                                    "seq_region_end"))
-               
-                if (result is not None):
-                    result = result.union(exonsDF)
-                else:
-                    result = exonsDF
+                try:
+                    tmp = self._spark.read.orc('tmp').repartition(10)
+                    tmp = tmp.union(exonsDF)
+                except: 
+                    tmp = exonsDF
+                tmp.write.save(path='tmp', format='orc', mode='overwrite')
+
+        result = self._spark.read.orc('tmp')
         if (result == None):
             return
-        #result.show(4)
         file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(result, "exons_with_seq", tmp_folder)

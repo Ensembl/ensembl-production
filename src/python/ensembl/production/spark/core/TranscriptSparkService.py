@@ -113,7 +113,6 @@ class TranscriptSparkService:
         file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(transcripts, "transcripts", tmp_folder)
 
-
     """
     Apply edits to the list of transcripts or translations
     sequence must be  in dataFrame
@@ -192,10 +191,10 @@ class TranscriptSparkService:
     Returns transcripts with translatable sequence
     """
     def translatable_seq(self, db: str, user: str, password: str,
-                         exons_df=None, keep_seq=False):
+                         translatable_seq=None, keep_seq=False):
          transcripts_with_seq = self.transcripts_translation_sequence(db, user,
                                                                      password,
-                                                                    exons_df)
+                                                                    translatable_seq)
 
          @udf(returnType=StringType())
          def translatable_sequence(sequence, translation_region_start,\
@@ -230,8 +229,8 @@ class TranscriptSparkService:
 
          return transcripts_with_seq
 
-    def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False):
-         translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
+    def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False, top_level_seq = None):
+         translated_seq = self.translatable_seq(db, user, password, top_level_seq, keep_seq)
          @udf(returnType=StringType())
          def translate_sequence(raw_sequence, codon_table, phase):
              #Normalize phase and codon table
@@ -297,14 +296,14 @@ class TranscriptSparkService:
     Returns transcript with translation and  whole sequence
     """
     def transcripts_translation_sequence(self, db: str, user: str, password: str,
-                         exons_df=None, tmp_folder=None):
+                         top_level_seq=None, tmp_folder=None):
         transcripts = self.load_transcripts_fs(db, user,
                                                 password, tmp_folder)
         translation_service = TranslationSparkService(self._spark)
-        if (exons_df == None):
+        if (top_level_seq != None):
             exon_service = ExonSparkService(self._spark)
             exons_df = exon_service.exons_with_seq(db,  user,\
-                                                   password).repartition(10)
+                                                   password, top_level_seq).repartition(10)
             if (exons_df == None):
                 return
         #For each exon calculate length, concat with id for further translation
@@ -370,8 +369,11 @@ class TranscriptSparkService:
                     .alias("sequence"), \
                     concat_ws(" ", expr("""transform(sort_array(collect_list(struct(rank,length)),True), x -> x.length)"""))\
                     .alias("length"))\
-                    .drop("version", "created_date", "modified_date", "stable_id")\
-                    .join(translation_df.withColumn("translation_stable_id", translation_df.stable_id), on=["transcript_id"], how="left_outer")\
+                    .drop("version", "created_date", "modified_date", "stable_id")
+            file_service = FileSystemSparkService(self._spark)
+            transcripts_with_seq = file_service.write_df_to_orc(transcripts_with_seq,
+                                            "transcripts_with_seq", tmp_folder)
+            transcripts_with_seq = transcripts_with_seq.join(translation_df.withColumn("translation_stable_id", translation_df.stable_id), on=["transcript_id"], how="left_outer")\
                     .drop("version", "seq_region_strand", "created_date", "modified_date", "stable_id")\
                     .join(transcripts.withColumnRenamed("biotype", "transcript_biotype")\
                         .withColumnRenamed("desription", "transcript_desription")\
@@ -390,10 +392,14 @@ class TranscriptSparkService:
                                       on=[transcripts_with_seq.end_exon_id==exons_df.exon_id], how="left_outer").dropDuplicates()
 
 
-            if (result == None):
-                result = transcripts_with_seq
-            else:
-                result = result.union(transcripts_with_seq)
+            try:
+                tmp = self._spark.read.orc('tmp-transcripts').repartition(10)
+                tmp = tmp.union(transcripts_with_seq)
+            except: 
+                tmp = transcripts_with_seq
+            tmp.write.save(path='tmp-transcripts', format='orc', mode='overwrite')
+
+        result = self._spark.read.orc('tmp-transcripts')
 
         transcripts_with_seq = result
         #Apply transcript edits
@@ -414,7 +420,6 @@ class TranscriptSparkService:
                                                             "seq_end",
                                                             "end_exon_id"))
         
-        file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(transcripts_with_seq,
                                             "transcripts_with_seq", tmp_folder)
         

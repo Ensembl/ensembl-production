@@ -18,16 +18,13 @@ url =\
 username = "ensro"
 pwd = ""
 
-import sys
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, col, concat, length, udf, least, greatest
+from pyspark.sql.functions import lit, col, concat, udf, least, greatest
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pyspark.sql.types import StringType
 import argparse
 import glob
-import shutil
-import os
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Fasta files dump')
@@ -35,6 +32,7 @@ parser.add_argument('--password', action="store", dest='password', default="")
 parser.add_argument('--username', action="store", dest='username', default="ensro")
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
+parser.add_argument('--sequence', action="store", dest='sequence', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -42,16 +40,17 @@ pwd = args.password
 username = args.username
 url = args.db
 base_dir = args.base_dir
+sequence = args.sequence
 
 import os
 confi=SparkConf()
-confi.set("spark.executor.memory", "14g")
-confi.set("spark.driver.memory", "20g")
-confi.set("spark.cores.max", "4")
+confi.set("spark.executor.memory", "10g")
+confi.set("spark.driver.memory", "15g")
+confi.set("spark.cores.max", "1")
 confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
 confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
-confi.set("spark.driver.maxResultSize", "10G")
+confi.set("spark.driver.maxResultSize", "3G")
 confi.set("spark.ui.showConsoleProgress", "false")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
 spark_session.sparkContext.setLogLevel("ERROR")
@@ -60,10 +59,7 @@ transcript_service = TranscriptSparkService(spark_session)
 # we assume the following data categories for core fd:  
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
-# Genome fasta
-fastaDf = transcript_service.translated_seq(url, username, pwd, None, True)
-#The folder where we save sequence is spicies folder in the base dir, change here will require change seq folder for gtf dump
-fastaDf.write.orc("sequence", mode="overwrite")
+
 @udf(returnType=StringType())
 def trimSeq(sequence):
         if(sequence[0:1] == "!"):
@@ -72,6 +68,7 @@ def trimSeq(sequence):
             sequence = sequence[:-1]
         return sequence
 
+fastaDf = spark_session.read.orc(sequence + "/sequence")
 
 fastaDf = fastaDf.withColumn("sequence", trimSeq("sequence"))
 #Get genes information
@@ -97,11 +94,7 @@ genes = genes.withColumn("gene_description", describe("display_label", "descript
 @udf(returnType=StringType())
 def seq_split(seq):
     line_length = 60
-    result = seq[:line_length]
-    i = line_length
-    while(i < len(seq)):
-        result = result + "\n" + seq[i:i+line_length]
-        i = i + line_length
+    result = ('\n').join((seq[i:i+line_length]) for i in range(0, len(seq), line_length))
     return  result
             
 #Getting cs version
@@ -114,8 +107,8 @@ csversion = spark_session.read\
             .option("password", pwd)\
             .load()\
             .collect()[0][0]
-
-cdna_fasta = spark_session.read.orc("sequence_cdna")
+#TODO: extract path to config option 
+cdna_fasta = spark_session.read.orc(sequence + "/sequence_cdna")
 pep_fasta = fastaDf
 
 #Unite pep header
@@ -123,8 +116,8 @@ pep_fasta = pep_fasta.orderBy("seq_region_name", "tl_start")
 
 pep_fasta = pep_fasta\
     .join(genes.drop("seq_region_strand").withColumnRenamed("version", "gene_version"), on=["gene_id"], how = "left")\
-    .select(concat(lit(">"), col("translation_stable_id"), lit("."), col("tl_version"), lit(" "),\
-       lit("pep"), lit(" "), lit(csversion),\
+    .select(concat(lit(">"), col("translation_stable_id"), lit("."), col("tl_version"),\
+       lit(" pep "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
        lit(":"), least(col("tl_start"), col("tl_end")),\
        lit(":"), greatest(col("tl_start"), col("tl_end")),\
@@ -176,7 +169,7 @@ f.close()
 cdna_fasta = cdna_fasta\
     .join(genes.drop("seq_region_strand", "seq_region_start", "seq_region_end").withColumnRenamed("version", "gene_version"), on=["gene_id"])\
     .select(concat(lit(">"), col("transcript_stable_id"), lit("."), col("version"),\
-       lit("cdna"), lit(" "), lit(csversion),\
+       lit(" cdna "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
        lit(":"), least(col("seq_region_start"), col("seq_region_end")),\
        lit(":"),  greatest(col("seq_region_start"), col("seq_region_end")),\
