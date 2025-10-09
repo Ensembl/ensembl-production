@@ -369,8 +369,11 @@ class TranscriptSparkService:
                     .alias("sequence"), \
                     concat_ws(" ", expr("""transform(sort_array(collect_list(struct(rank,length)),True), x -> x.length)"""))\
                     .alias("length"))\
-                    .drop("version", "created_date", "modified_date", "stable_id")\
-                    .join(translation_df.withColumn("translation_stable_id", translation_df.stable_id), on=["transcript_id"], how="left_outer")\
+                    .drop("version", "created_date", "modified_date", "stable_id")
+            file_service = FileSystemSparkService(self._spark)
+            transcripts_with_seq = file_service.write_df_to_orc(transcripts_with_seq,
+                                            "transcripts_with_seq", tmp_folder)
+            transcripts_with_seq = transcripts_with_seq.join(translation_df.withColumn("translation_stable_id", translation_df.stable_id), on=["transcript_id"], how="left_outer")\
                     .drop("version", "seq_region_strand", "created_date", "modified_date", "stable_id")\
                     .join(transcripts.withColumnRenamed("biotype", "transcript_biotype")\
                         .withColumnRenamed("desription", "transcript_desription")\
@@ -417,7 +420,6 @@ class TranscriptSparkService:
                                                             "seq_end",
                                                             "end_exon_id"))
         
-        file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(transcripts_with_seq,
                                             "transcripts_with_seq", tmp_folder)
         
