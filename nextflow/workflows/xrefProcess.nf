@@ -546,7 +546,7 @@ process Mapping {
     val species_name
 
     """
-    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.Mapping --dataflow '$dataflow' --release ${params.release} --base_path ${params.base_path} --registry_url ${params.registry_url} --ignore_warnings ${params.ignore_warnings} --log_timestamp $timestamp
+    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.Mapping --dataflow '$dataflow' --release ${params.release} --base_path ${params.base_path} --registry_url ${params.registry_url} --log_timestamp $timestamp
     """
 }
 
