@@ -84,7 +84,7 @@ class SequenceService:
             data_collect = regions.collect()
             for row in data_collect:
                 seq_id = str(row.seq_region_id)
-                if (len(is_primary) > 0): # Than primary assembly exists
+                if (len(is_primary) > 0): # Then primary assembly exists
                     query = text("select sequence from dna where seq_region_id=" + seq_id)
                     exe = conn.execute(query)
                     results = exe.scalars().all()

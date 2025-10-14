@@ -46,6 +46,7 @@ include { DumpFastaFiles } from './genset_fasta.nf'
 include { DumpGFF3_GTFFiles } from './gff3_gtf.nf'
 include { DumpEMBLFiles } from './embl.nf'
 include { DumpXrefFile } from './xref.nf'
+include { DumpChromosomeFile } from './chromosome.nf'
 include { DumpGenomeFiles } from './genome_fasta.nf'
 include { BuildTopLevelSequence } from './top_level_seq.nf'
 include { BuildFeatureSequence } from './feature_seq.nf'
@@ -82,7 +83,7 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = (["homo_sapiens_core_116_38", "128/12/15"])
+databases = (["abramis_brama_gca022829085v1_core_110_1", "128/12/15"])
 // abramis_brama_gca022829085v1_core_110_1
 // homo_sapiens_core_116_38
 //tupaia_belangeri_core_116_1
@@ -99,7 +100,7 @@ Channel.of(databases) \
 
 
 
-Channel.of(databases) | DumpXrefFile
+Channel.of(databases) | (DumpXrefFile & DumpChromosomeFile)
  
 }
 

@@ -18,9 +18,8 @@ from ensembl.production.spark.core.TranscriptSparkService import TranscriptSpark
 from pathlib import Path
 import glob
 import warnings
-from pyspark.sql.functions import udf, substring, concat_ws, expr, collect_list, sort_array
+from pyspark.sql.functions import udf, substring, concat_ws, expr
 from pyspark.sql.window import Window
-from typing import Optional
 import os
 from pyspark.sql.functions import lit
 from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
