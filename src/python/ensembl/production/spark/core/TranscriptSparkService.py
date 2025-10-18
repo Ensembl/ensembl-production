@@ -346,6 +346,8 @@ class TranscriptSparkService:
             .option("password", password)\
             .load().dropDuplicates()
         regions_plain = regions.collect()
+        tiny_regions = len(regions_plain) > 100
+        i = 0
         for region in regions_plain:
             codon_table = 1
             if region.value:
@@ -391,17 +393,23 @@ class TranscriptSparkService:
             transcripts_with_seq.drop("exon_id").join(exons_df_tmp.select("exon_id", "end_phase"),
                                       on=[transcripts_with_seq.end_exon_id==exons_df.exon_id], how="left_outer").dropDuplicates()
 
+            if (tiny_regions):
+                i = i + 1
+                try:
+                    result = result.union(transcripts_with_seq)
+                except:
+                    result = transcripts_with_seq
+                if (i > 200):
+                    result.write.save(path='tmp-transcripts', format='orc', mode='append', partitionBy="seq_region_id")
+                    result = None
+                    i = 0
+            else:
+                transcripts_with_seq.write.save(path='tmp-transcripts', format='orc', mode='append', partitionBy="seq_region_id")
+           
 
-            try:
-                tmp = self._spark.read.orc('tmp-transcripts').repartition(10)
-                tmp = tmp.union(transcripts_with_seq)
-            except: 
-                tmp = transcripts_with_seq
-            tmp.write.save(path='tmp-transcripts', format='orc', mode='overwrite')
+        result = self._spark.read.orc('tmp-transcripts').repartition(30).write.save(path='tmp-transcripts-final', format='orc', mode='overwrite')
 
-        result = self._spark.read.orc('tmp-transcripts')
-
-        transcripts_with_seq = result
+        transcripts_with_seq = self._spark.read.orc('tmp-transcripts-final')
         #Apply transcript edits
 
         edit_codes = ['_rna_edit']

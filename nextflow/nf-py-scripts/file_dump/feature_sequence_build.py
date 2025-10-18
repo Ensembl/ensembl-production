@@ -38,11 +38,11 @@ top_level_seq = args.top_level_seq
 
 confi=SparkConf()
 confi.set("spark.executor.memory", "10g")
-confi.set("spark.driver.memory", "16g")
+confi.set("spark.driver.memory", "10g")
 confi.set("spark.cores.max", "4")
 confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
-confi.set("spark.driver.maxResultSize", "8G")
+confi.set("spark.driver.maxResultSize", "3G")
 confi.set("spark.ui.showConsoleProgress", "true")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
 spark_session.sparkContext.setLogLevel("ERROR")

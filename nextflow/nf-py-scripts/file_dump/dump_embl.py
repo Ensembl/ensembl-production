@@ -63,6 +63,8 @@ transcript_service = TranscriptSparkService(spark_session)
 exon_service = ExonSparkService(spark_session)
 
 def lines_break(full, prefix):
+    if (full is None):
+        full = "ERROR"
     result = ""
     full = "\n"+ prefix + full
     full = full.split(" ")

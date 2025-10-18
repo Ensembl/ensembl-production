@@ -11,18 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sqlalchemy
-import os
-import shutil
+
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from sqlalchemy import text
-from pyspark.sql.functions import lit, udf
+from pyspark.sql.functions import udf
 from Bio.Seq import Seq
 from ensembl.production.spark.core.TranslationSparkService import TranslationSparkService
 from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
 __all__ = ['ExonSparkService']
-
 
 class ExonSparkService:
 
@@ -154,15 +151,9 @@ class ExonSparkService:
                                                     reverse_compliment("seq_region_strand",\
                                                    "seq_region_start",\
                                                    "seq_region_end"))
-                try:
-                    tmp = self._spark.read.orc('tmp').repartition(10)
-                    tmp = tmp.union(exonsDF)
-                except: 
-                    tmp = exonsDF
-                tmp.write.save(path='tmp', format='orc', mode='overwrite')
 
-        result = self._spark.read.orc('tmp')
-        if (result == None):
-            return
-        file_service = FileSystemSparkService(self._spark)
-        return file_service.write_df_to_orc(result, "exons_with_seq", tmp_folder)
+                exonsDF.write.save(path='tmp', format='orc', mode='append', partitionBy="seq_region_id")
+
+        result = self._spark.read.orc('tmp').repartition(30).write.save(path='tmp-exons-final', format='orc', mode='overwrite')
+        result = self._spark.read.orc('tmp-exons-final')
+        return result

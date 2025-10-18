@@ -108,7 +108,7 @@ with engine.connect() as conn:
         sequence_str = ('\n').join((sequence_str[i:i+60]) for i in range(0, len(sequence_str), 60)) + "\n"
         f_unmasked.write(sequence_str)
 
-        query = text('select * from repeat_feature where analysis_id in (select analysis_id from analysis join meta on meta.meta_value=analysis.logic_name and meta.meta_key="repeat.analysis") where seq_region_id=' + seq_id)
+        query = text('select * from repeat_feature where analysis_id in (select analysis_id from analysis join meta on meta.meta_value=analysis.logic_name and meta.meta_key="repeat.analysis") and seq_region_id=' + seq_id)
         repeats = conn.execute(query)
         i = 0
         sequence_rep = ""

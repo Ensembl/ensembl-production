@@ -709,11 +709,17 @@ class GFFService():
             features = self.dump_all_features(db, user, password)
         
         [genes, transcripts, exons, cds, assembly_df, regions] = features       
-         
+
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
-        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
-        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
+        try:    
+            assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        except: 
+            assembly_acc = ""
+        try: 
+            genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
+        except:
+            genebuild_date = ""
         tmp_fp = assembly_name + "_gff"
                 
         # Strand
@@ -1060,9 +1066,14 @@ class GFFService():
         [genes, transcripts, exons, cds, assembly_df, regions] = features
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
-        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
-        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
-                        
+        try:    
+            assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        except: 
+            assembly_acc = ""
+        try: 
+            genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
+        except:
+            genebuild_date = ""                        
         tmp_fp = assembly_name
         # Join attribs
         @udf(returnType=StringType())
