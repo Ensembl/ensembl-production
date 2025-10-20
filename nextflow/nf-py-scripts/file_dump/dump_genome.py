@@ -87,7 +87,7 @@ with engine.connect() as conn:
 
     query = text("select sr.name as sr_name, sr.seq_region_id, sr.length, cs.* from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1")
     regions = conn.execute(query)
-    result = ""
+    line_length = 60
     for region in regions:
         seq_id = str(region.seq_region_id)
         results = ""
@@ -105,12 +105,13 @@ with engine.connect() as conn:
         info = ">" + str(region.sr_name) + " unmasked:" + assembly_level + " " + str(region.name) + ":"\
               +  str(region.version) + ":" +  str(region.sr_name) + ":1:" + str(region.length) + ":" +  str(region.rank) + "\n"
         f_unmasked.write(info)
-        sequence_str = ('\n').join((sequence_str[i:i+60]) for i in range(0, len(sequence_str), 60)) + "\n"
+        sequence_str = ('\n').join((sequence_str[i:i+line_length]) for i in range(0, len(sequence_str), line_length)) + "\n"
         f_unmasked.write(sequence_str)
 
         query = text('select * from repeat_feature where analysis_id in (select analysis_id from analysis join meta on meta.meta_value=analysis.logic_name and meta.meta_key="repeat.analysis") and seq_region_id=' + seq_id)
         repeats = conn.execute(query)
         i = 0
+
         sequence_rep = ""
         sequence_hrep = ""
         for repeat in repeats:
@@ -124,8 +125,8 @@ with engine.connect() as conn:
 
             i = repeat.seq_region_end
         sequence_rep = sequence_rep + sequence_raw[i:]
-        sequence_rep = ('\n').join((sequence_rep[i:i+60]) for i in range(0, len(sequence_rep), 60)) + "\n"
-        sequence_hrep = ('\n').join((sequence_hrep[i:i+60]) for i in range(0, len(sequence_hrep), 60)) + "\n"
+        sequence_rep = ('\n').join((sequence_rep[i:i+line_length]) for i in range(0, len(sequence_rep), line_length)) + "\n"
+        sequence_hrep = ('\n').join((sequence_hrep[i:i+line_length]) for i in range(0, len(sequence_hrep), line_length)) + "\n"
         
         info = ">" + str(region.sr_name) + " softmasked:" + assembly_level + " " + str(region.name) + ":"\
         +  str(region.version) + ":" +  str(region.sr_name) + ":1:" + str(region.length) + ":" +  str(region.rank) + "\n"
