@@ -93,11 +93,14 @@ class ExonSparkService:
 
     """
     Returns exons dataframe with sequence column
+    For now exon sequence is used only to build transcrpt sequence, so we drop all unnecessary columns early
     """
     def exons_with_seq(self, db: str, user: str, password: str,
                        top_level_seq, tmp_folder="tmp/"):
 
-        exons_raw = self.load_exons_fs(db, user, password, tmp_folder)
+        exons_raw = self.load_exons_fs(db, user, password, tmp_folder)\
+            .filter("is_current=True").drop("is_constitutive", "created_date", "modified_date", "is_current")
+        
         regions = self._spark.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
@@ -110,7 +113,7 @@ class ExonSparkService:
         regions = file_service.write_df_to_orc(regions, "regions", tmp_folder)
 
 
-        # Using iterations on regions - because we really don't change
+        # Using iterations on regions - because we don't change
         # them, just use as index for dna table
         result = None
         data_collect = regions.collect()
@@ -125,7 +128,7 @@ class ExonSparkService:
                 except OSError:
                     pass             
                 if(len(results) == 0):
-                    print(seq_id)
+                    print("Sequnce file for the region id not found: ", seq_id)
                     print(top_level_seq + "/" + seq_id + ".txt")
                     continue
                 # Here is an algorythm to concat dna sequnce from
@@ -145,14 +148,14 @@ class ExonSparkService:
                         return str(sequence)
                     return sequence
                 #For each exon we append region length, for circular seq
-                exonsDF = exons_raw.filter("seq_region_id=" +
+                exons = exons_raw.filter("seq_region_id=" +
                                            seq_id)\
                                            .withColumn("sequence",\
                                                     reverse_compliment("seq_region_strand",\
                                                    "seq_region_start",\
                                                    "seq_region_end"))
 
-                exonsDF.write.save(path='tmp', format='orc', mode='append', partitionBy="seq_region_id")
+                exons.write.save(path='tmp', format='orc', mode='append', partitionBy="seq_region_id")
 
         result = self._spark.read.orc('tmp').repartition(30).write.save(path='tmp-exons-final', format='orc', mode='overwrite')
         result = self._spark.read.orc('tmp-exons-final')

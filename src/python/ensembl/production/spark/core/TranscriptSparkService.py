@@ -205,9 +205,7 @@ class TranscriptSparkService:
                 return ""
             translation_region_end = int(translation_region_end)
             translation_region_start = int(translation_region_start)
-           # if((phase > 0) or (end_phase > 0)):
-           #     print("WARNING: phase is not null: " +
-           #           translation_id)
+
             if (translation_region_end < translation_region_start):
                 sequence = "N"*end_phase + sequence[(translation_region_end - 1):\
                                       (translation_region_start + 1)]
@@ -294,6 +292,7 @@ class TranscriptSparkService:
 
     """
     Returns transcript with translation and  whole sequence
+    This function now is used only to build transcripts sequnce, so most columns can be ignored
     """
     def transcripts_translation_sequence(self, db: str, user: str, password: str,
                          top_level_seq=None, tmp_folder=None):
@@ -306,11 +305,6 @@ class TranscriptSparkService:
                                                    password, top_level_seq).repartition(10)
             if (exons_df == None):
                 return
-        #For each exon calculate length, concat with id for further translation
-        #start calc
-        @udf(returnType=StringType())
-        def calc_length(start, end, id):
-            return  str(abs(int(end) - int(start) + 1)) + ":" + str(id)
 
         @udf(returnType=StringType())
         def get_translation_start(length, start, start_id):
@@ -340,48 +334,64 @@ class TranscriptSparkService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select distinct t.seq_region_id, sr.name, sra.value from transcript t left join seq_region sr on t.seq_region_id= sr.seq_region_id left join seq_region_attrib sra on sra.seq_region_id = t.seq_region_id \
+            .option("dbtable", "(select distinct t.seq_region_id, sr.name, sra.value, sr.length from transcript t left join seq_region sr on t.seq_region_id= sr.seq_region_id left join seq_region_attrib sra on sra.seq_region_id = t.seq_region_id \
                     and sra.attrib_type_id = 11)tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
         regions_plain = regions.collect()
+        #If we have tiny regions, we should group regions before dump on disk, not to have huge amount of tiny files
         tiny_regions = len(regions_plain) > 100
         i = 0
         for region in regions_plain:
             codon_table = 1
             if region.value:
                 codon_table = int(region.value)
+            region_length = int(region.length)
             region = str(region.seq_region_id)
+
+            #For each exon calculate length, concat with id for further translation
+            #start calc
+            @udf(returnType=StringType())
+            def calc_length(start, end, id):
+                if (end >= start):
+                    return  str(abs(int(end) - int(start) + 1)) + ":" + str(id)
+                else:  #Circular
+                    return  str((region_length - abs(int(end)) + int(start) + 1)) + ":" + str(id)
             exons_df_tmp = exons_df.filter("seq_region_id=" + region)
             count = exons_df_tmp.count()
             if(count == 0):
                 continue
             exons_df_tmp = exons_df_tmp.sort("transcript_id", "rank", ascending=[True, True])
-            exons_df_tmp = exons_df_tmp.withColumn("length",\
+            exons_df_with_length = exons_df_tmp.withColumn("length",\
                                        calc_length("seq_region_start",\
                                                    "seq_region_end", "exon_id"))
 
             #print(region + " " + str(count))
-            #Mark translation start and end   
-
+            #Concat transcript's exons sequnce  
             transcripts_with_seq =\
-            exons_df_tmp.groupBy("transcript_id")\
+            exons_df_with_length.groupBy("transcript_id")\
             .agg(concat_ws(" ",expr("""transform(sort_array(collect_list(struct(rank,sequence)),True), x -> x.sequence)"""))\
                     .alias("sequence"), \
                     concat_ws(" ", expr("""transform(sort_array(collect_list(struct(rank,length)),True), x -> x.length)"""))\
                     .alias("length"))\
-                    .drop("version", "created_date", "modified_date", "stable_id")
+
+            # At this point we need a disk sink - not to build complicated flow
+            # This dataframe will be droped just at the end od the loop (merged to result), so significant amount of it doesn't break performance
+            # And we can write every region separetly
             file_service = FileSystemSparkService(self._spark)
             transcripts_with_seq = file_service.write_df_to_orc(transcripts_with_seq,
                                             "transcripts_with_seq", tmp_folder)
-            transcripts_with_seq = transcripts_with_seq.join(translation_df.withColumn("translation_stable_id", translation_df.stable_id), on=["transcript_id"], how="left_outer")\
-                    .drop("version", "seq_region_strand", "created_date", "modified_date", "stable_id")\
+            
+            
+            transcripts_with_seq = transcripts_with_seq.join(translation_df.withColumnRenamed("stable_id", "translation_stable_id"), on=["transcript_id"], how="left_outer")\
+                    .drop("version", "seq_region_strand", "created_date", "modified_date")
+            
+            transcripts_with_seq = transcripts_with_seq.filter(transcripts_with_seq.translation_stable_id.isNotNull())\
                     .join(transcripts.withColumnRenamed("biotype", "transcript_biotype")\
                         .withColumnRenamed("desription", "transcript_desription")\
                         .withColumnRenamed("stable_id", "transcript_stable_id"), on=["transcript_id"])\
                     .join(regions.select("seq_region_id", "name").withColumnRenamed("name", "seq_region_name"), on=["seq_region_id"])
-
             transcripts_with_seq =\
             transcripts_with_seq.withColumn("sequence", regexp_replace("sequence", " ", ""))\
                 .withColumn("codon_table", lit(codon_table))
@@ -410,13 +420,14 @@ class TranscriptSparkService:
         result = self._spark.read.orc('tmp-transcripts').repartition(30).write.save(path='tmp-transcripts-final', format='orc', mode='overwrite')
 
         transcripts_with_seq = self._spark.read.orc('tmp-transcripts-final')
+        
         #Apply transcript edits
 
         edit_codes = ['_rna_edit']
         seq_edits = self._load_seq_edits_fs(db, user, password, edit_codes, tmp_folder)
         transcripts_with_seq = self.apply_edits(transcripts_with_seq, seq_edits)
         transcripts_with_seq.write.orc("sequence_cdna", mode="overwrite")
-        transcripts_with_seq = transcripts_with_seq.filter(transcripts_with_seq.translation_stable_id.isNotNull())
+
         #Translation start and end relative to seq start
         transcripts_with_seq =\
         transcripts_with_seq.withColumn("translation_region_start",
