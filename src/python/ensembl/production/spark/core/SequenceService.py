@@ -19,6 +19,8 @@ from sqlalchemy import text
 from pyspark.sql.functions import lit, udf
 from Bio.Seq import Seq
 from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
+from pyspark.sql.functions import regexp_replace, expr, concat, concat_ws, collect_list, col
+
 
 __all__ = ['ExonSparkService']
 
@@ -101,21 +103,30 @@ class SequenceService:
                         continue
                     result = ""
                     prev_end = 0
+                    
+                    # Here is an algorythm to concat dna sequnce from
+                    # corresponding letters, probably it worth implementing in spark
                     for res in results:
                         gap = res.asm_start - prev_end - 1 
                         prev_end = res.asm_end       
                         result = result + "N"*gap + res.sequence[res.cmp_start-1:res.cmp_end]
-                # Here is an algorythm to concat dna sequnce from
-                # corresponding letters
-                file_path =  "" + path + "/" + seq_id  + ".txt"             
+            
                 try:
-                    os.remove(file_path)
+                    os.remove(path)
                 except OSError:
                     pass
-                f = open(file_path, "a")
-                f.write(result)
-                f.close()
 
+                schema = StructType([StructField("seq_regiion_id", IntegerType(), True),
+                     StructField("sequence", StringType(), True)]
+                     )
+                region_df = self._spark.createDataFrame([seq_id, result], schema)
+                region_df.write.save(path=path + "-tmp", format='orc', mode='append', partitionBy="seq_region_id")
+
+            @udf(returnType=StringType())
+            def make_y(sequence_y, sequence_x):
+             return "N"*10000 + sequence_x[10000:2781479] + sequence_y[0:54106423]\
+                    + sequence_x[155701382:156030895] + sequence_y[54106423:]
+            
             #PARs region in human
             if (len(assembly_GRCh38) > 0):
 
@@ -135,36 +146,10 @@ class SequenceService:
                     .option("user", user)\
                     .option("password", password)\
                     .load().dropDuplicates().collect()[0].seq_region_id
-                
-                file_path_x =  "" + path + "/" + str(x_region_id)  + ".txt" 
-                file_path_y =  "" + path + "/" + str(y_region_id)  + ".txt"   
-                f_x = open(file_path_x, "r")  
-                f_y = open(file_path_y, "r")          
-                sequence_x = "N"*10000 + f_x.read()
-                sequence_y = f_y.read()
-                sequence_x_result = sequence_x
-                sequence_y_result = "N"*10000 + sequence_x[10000:2781479] + sequence_y[0:54106423]\
-                    + sequence_x[155701382:156030895] + sequence_y[54106423:]
-
-                # Find region id of x
-                # Open x file, prepend seq with 10k N, write to file. 
-                # Open Y file, concat 10k N + X: 10001 - 2781479 + 
-                # Y:2781480 - 56887902 + X: 155701383 - 156030895 + Y:57217416 - 57227415
-                # Write Y file
-
-                try:
-                    os.remove(file_path_x)
-                    os.remove(file_path_y)
-                except OSError:
-                    pass
-
-                f = open(file_path_x, "a")
-                f.write(sequence_x_result)
-                f.close()
-
-                f = open(file_path_y, "a")
-                f.write(sequence_y_result)
-                f.close()
-
+                dna = self._spark.read.orc(path + "-tmp")
+                dna = dna.withColumn("sequence").when(col("seq_region_id") == x_region_id, concat(lit("N"*10000),"sequence")).otherwise("sequence")
+                sequence_x = dna.filter(col("seq_region_id") == x_region_id).select("sequence").collect()[0]
+                dna = dna.withColumn("sequence").when(col("seq_region_id") == y_region_id, make_y("sequence", sequence_x)).otherwise("sequence")
+                dna.write.save(path=path, format='orc', mode='overwrite', partitionBy="seq_region_id")
         return 0
  

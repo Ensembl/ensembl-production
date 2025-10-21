@@ -121,15 +121,9 @@ class ExonSparkService:
         for row in data_collect:
                 seq_id = str(row.seq_region_id)
                 results = ""
-                try:
-                    f = open(top_level_seq + "/" + seq_id + ".txt", "r")
-                    results = f.read()
-                    f.close()
-                except OSError:
-                    pass             
+                results = self._spark.read.orc(top_level_seq).filter("seq_region_id=" + seq_id).select("sequence").collect()[0]         
                 if(len(results) == 0):
-                    print("Sequnce file for the region id not found: ", seq_id)
-                    print(top_level_seq + "/" + seq_id + ".txt")
+                    print("Sequence file for the region id not found: ", seq_id)
                     continue
                 # Here is an algorythm to concat dna sequnce from
                 # corresponding letters

@@ -191,10 +191,10 @@ class TranscriptSparkService:
     Returns transcripts with translatable sequence
     """
     def translatable_seq(self, db: str, user: str, password: str,
-                         translatable_seq=None, keep_seq=False):
+                         top_level_seq=None, keep_seq=False):
          transcripts_with_seq = self.transcripts_translation_sequence(db, user,
                                                                      password,
-                                                                    translatable_seq)
+                                                                    top_level_seq)
 
          @udf(returnType=StringType())
          def translatable_sequence(sequence, translation_region_start,\
