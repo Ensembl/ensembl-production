@@ -25,18 +25,8 @@ import argparse
 from sqlalchemy import text
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-
-confi=SparkConf()
-confi.set("spark.executor.memory", "10g")
-confi.set("spark.driver.memory", "15g")
-confi.set("spark.cores.max", "1")
-confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
-confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
-confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
-confi.set("spark.driver.maxResultSize", "3G")
-confi.set("spark.ui.showConsoleProgress", "false")
-spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
-spark_session.sparkContext.setLogLevel("ERROR")
+from pyspark.sql.types import *
+import glob
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Fasta files dump')
@@ -53,6 +43,19 @@ username = args.username
 url = args.db
 base_dir = args.base_dir
 sequence = args.sequence
+
+
+confi=SparkConf()
+confi.set("spark.executor.memory", "10g")
+confi.set("spark.driver.memory", "15g")
+confi.set("spark.cores.max", "1")
+confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
+confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
+confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
+confi.set("spark.driver.maxResultSize", "3G")
+confi.set("spark.ui.showConsoleProgress", "false")
+spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
+spark_session.sparkContext.setLogLevel("ERROR")
 
 import os
 #need to create working dirs $output_dir, $timestamped_dir, $web_dir, $ftp_dir for each assembly (species) and data category
@@ -78,7 +81,7 @@ assembly_level = spark_session.read\
             .option("dbtable", "(select meta_value from meta where meta_key=\"assembly.level\")tmp")\
             .option("user", username)\
             .option("password", pwd)\
-            .load().colect()[0]
+            .load().collect()[0][0]
 
 @udf(returnType=StringType())
 def split_seq(sequence):
@@ -86,8 +89,8 @@ def split_seq(sequence):
 
     
 dna_unmasked = dna.join(regions, on = ["seq_region_id"], how = "left_outer").withColumn("info", concat(\
-    lit(">") , "sr_name", lit(" unmasked:") + lit(assembly_level + " "), "name", lit(":"),\
-        "version", lit(":") , "sr_name", lit(":1:"), "length", lit(":"), "rank"))\
+    lit(">") , "sr_name", lit(" unmasked:"), lit(assembly_level + " "), "name", lit(":"),\
+        "version", lit(":"), "sr_name", lit(":1:"), "length", lit(":"), "rank"))\
         .withColumn(sequence, split_seq("sequence"))
 
 dna_unmasked.repartition(1)\

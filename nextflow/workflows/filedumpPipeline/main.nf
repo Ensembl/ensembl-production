@@ -83,7 +83,7 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = (["abramis_brama_gca022829085v1_core_110_1", "128/12/15"])
+databases = (["abramis_brama_gca022829085v1_core_110_1", "GCA/000/001/405/29/ensembl/2025"])
 // abramis_brama_gca022829085v1_core_110_1
 // homo_sapiens_core_116_38
 //tupaia_belangeri_core_116_1

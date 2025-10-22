@@ -121,7 +121,7 @@ class ExonSparkService:
         for row in data_collect:
                 seq_id = str(row.seq_region_id)
                 results = ""
-                results = self._spark.read.orc(top_level_seq).filter("seq_region_id=" + seq_id).select("sequence").collect()[0]         
+                results = self._spark.read.orc(top_level_seq).filter("seq_region_id=" + seq_id).select("sequence").collect()[0][0]       
                 if(len(results) == 0):
                     print("Sequence file for the region id not found: ", seq_id)
                     continue

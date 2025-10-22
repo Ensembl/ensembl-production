@@ -40,7 +40,7 @@ class SequenceService:
     """
     Creates a sequence on top level (features level) from contig level, write to file
     """
-    def build_top_level_seq(self, db: str, user: str, password: str, path = ""):
+    def build_top_level_seq(self, db: str, user: str, password: str, path_top = ""):
         
         #Get all transcripts seq_regions
         #Select seq_region_id from transcript group by seq_region_id
@@ -80,8 +80,7 @@ class SequenceService:
         if (len(password) > 0):
             url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
         engine = sqlalchemy.create_engine(url)
-        if not os.path.exists(path):
-            os.makedirs(path)
+
         with engine.connect() as conn:
             data_collect = regions.collect()
             for row in data_collect:
@@ -110,17 +109,15 @@ class SequenceService:
                         gap = res.asm_start - prev_end - 1 
                         prev_end = res.asm_end       
                         result = result + "N"*gap + res.sequence[res.cmp_start-1:res.cmp_end]
-            
-                try:
-                    os.remove(path)
-                except OSError:
-                    pass
 
-                schema = StructType([StructField("seq_regiion_id", IntegerType(), True),
+                schema = StructType([StructField("seq_region_id", IntegerType(), True),
                      StructField("sequence", StringType(), True)]
                      )
-                region_df = self._spark.createDataFrame([seq_id, result], schema)
-                region_df.write.save(path=path + "-tmp", format='orc', mode='append', partitionBy="seq_region_id")
+                region_df = self._spark.createDataFrame([(int(seq_id), str(result))], schema)
+                region_df.write.save(path=path_top + "-tmp", format='orc', mode='append', partitionBy="seq_region_id")
+            
+            dna = self._spark.read.orc(path_top + "-tmp")
+            dna.write.save(path=path_top, format='orc', mode='overwrite', partitionBy="seq_region_id")
 
             @udf(returnType=StringType())
             def make_y(sequence_y, sequence_x):
@@ -146,10 +143,11 @@ class SequenceService:
                     .option("user", user)\
                     .option("password", password)\
                     .load().dropDuplicates().collect()[0].seq_region_id
-                dna = self._spark.read.orc(path + "-tmp")
+                dna = self._spark.read.orc(path_top + "-tmp")
                 dna = dna.withColumn("sequence").when(col("seq_region_id") == x_region_id, concat(lit("N"*10000),"sequence")).otherwise("sequence")
                 sequence_x = dna.filter(col("seq_region_id") == x_region_id).select("sequence").collect()[0]
                 dna = dna.withColumn("sequence").when(col("seq_region_id") == y_region_id, make_y("sequence", sequence_x)).otherwise("sequence")
-                dna.write.save(path=path, format='orc', mode='overwrite', partitionBy="seq_region_id")
+                dna.write.save(path=path_top, format='orc', mode='overwrite', partitionBy="seq_region_id")
+
         return 0
  

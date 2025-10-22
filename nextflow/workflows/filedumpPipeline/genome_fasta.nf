@@ -29,8 +29,6 @@ process DumpGenomeFiles {
 
   output:
   stdout
-  path "hardmasked.fa"
-  path "softmasked.fa"
   path "unmasked.fa"
 
   """

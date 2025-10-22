@@ -37,7 +37,7 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--sequence', action="store", dest='sequence', default="")
-parser.add_argument('--top-levelsequence', action="store", dest='top_sequence', default="")
+parser.add_argument('--top_level_seq', action="store", dest='top_sequence', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -90,6 +90,8 @@ def split_intro(full, prefix):
 @udf(returnType=StringType())
 def split_coordinates(coordinates):
     full = coordinates
+    if (full is None):
+        full = "ERROR"
     prefix = "FT                   "
     result = ""
     full = "\nFT   " + full
@@ -121,7 +123,8 @@ def gene_desc(locus_tag, desc):
 def join_coord(coordinates):
     if (coordinates.find(",") < 0):
         return coordinates
-    return concat(lit("join("), "coordinates", lit(")"))
+    else:
+        return "join(" + coordinates + ")"
 
 @udf(returnType=StringType())
 def xref_note(xref, prefix=None): 
@@ -213,6 +216,7 @@ region = spark_session.read\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
+dna = dna.join(region, on = ["seq_region_id"], how = "left")
 taxonomy_id = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -296,9 +300,7 @@ mRNA =\
         .drop("created_date", "modified_date", "stable_id")
 
 mRNA =\
-    mRNA.filter("single=False").withColumn("coordinates", join_coord("coordinates"))
-
-
+    mRNA.withColumn("coordinates", join_coord("coordinates"))
 
 mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version", "seq_region_id"), on=["gene_id"])
 
@@ -337,7 +339,7 @@ cds =\
         .drop("created_date", "modified_date", "stable_id")
 
 cds =\
-    cds.filter("single=False").withColumn("coordinates", join_coord("coordinates"))
+    cds.withColumn("coordinates", join_coord("coordinates"))
 
 cds = cds.withColumn("coordinates", concat(lit("CDS             "), "coordinates"))
 cds = cds.withColumn("coordinates", split_coordinates("coordinates"))
