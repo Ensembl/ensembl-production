@@ -164,9 +164,14 @@ class ZFINParser(BaseParser):
                 if zfin.get(line["acc"]):
                     synonym = (
                         unicodedata.normalize("NFKD", line["syn"])
-                        .encode("ascii", "namereplace")
-                        .decode("ascii")
+                        .encode("latin-1", "xmlcharrefreplace")
+                        .decode("latin-1")
                     )
+                    # Truncate synonym if too long
+                    if len(synonym) > 255:
+                        synonym = synonym[:255]
+
+                    # Add the synonym for all ZFIN sources
                     self.add_to_syn_for_mult_sources(
                         line["acc"], sources, synonym, species_id, xref_dbi
                     )
