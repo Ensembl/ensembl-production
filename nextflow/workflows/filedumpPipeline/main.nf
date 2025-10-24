@@ -99,7 +99,6 @@ Channel.of(databases) \
 // All other files need features to be build to dump feature level fasta, gtf gff and embl formats
 
 
-
 Channel.of(databases) | (DumpXrefFile & DumpChromosomeFile)
  
 }

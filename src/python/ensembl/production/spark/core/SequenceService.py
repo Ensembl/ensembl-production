@@ -66,7 +66,6 @@ class SequenceService:
             .option("password", password)\
             .load().dropDuplicates().collect()
 
-        
         regions = self._spark.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
@@ -147,6 +146,7 @@ class SequenceService:
                 dna = dna.withColumn("sequence").when(col("seq_region_id") == x_region_id, concat(lit("N"*10000),"sequence")).otherwise("sequence")
                 sequence_x = dna.filter(col("seq_region_id") == x_region_id).select("sequence").collect()[0]
                 dna = dna.withColumn("sequence").when(col("seq_region_id") == y_region_id, make_y("sequence", sequence_x)).otherwise("sequence")
+                
                 dna.write.save(path=path_top, format='orc', mode='overwrite', partitionBy="seq_region_id")
 
         return 0

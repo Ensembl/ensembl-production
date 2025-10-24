@@ -271,8 +271,7 @@ class TranscriptSparkService:
          #We need to have in DF genomic coordinates of the translation
          translatable_exons = self.translatable_exons(db, user, password,
                          exons_df, None, False, True)
-         #This piece of code is very bad, need ref. Getting whole bunch translatable exons for tl_start
-         #TODO
+
          translated_sequence = \
          translated_seq.withColumn("sequence",
                                      translate_sequence("sequence", "codon_table", "phase")).drop("seq_region_end", "seq_region_start")
@@ -286,7 +285,7 @@ class TranscriptSparkService:
                                             True)
          translated_sequence = self.apply_edits(translated_sequence,
                                                 seq_edits, True)
-         
+
          return translated_sequence
 
 
@@ -387,7 +386,7 @@ class TranscriptSparkService:
             transcripts_with_seq = transcripts_with_seq.join(translation_df.withColumnRenamed("stable_id", "translation_stable_id"), on=["transcript_id"], how="left_outer")\
                     .drop("version", "seq_region_strand", "created_date", "modified_date")
             
-            transcripts_with_seq = transcripts_with_seq.filter(transcripts_with_seq.translation_stable_id.isNotNull())\
+            transcripts_with_seq = transcripts_with_seq\
                     .join(transcripts.withColumnRenamed("biotype", "transcript_biotype")\
                         .withColumnRenamed("desription", "transcript_desription")\
                         .withColumnRenamed("stable_id", "transcript_stable_id"), on=["transcript_id"])\
@@ -416,18 +415,20 @@ class TranscriptSparkService:
             else:
                 transcripts_with_seq.write.save(path='tmp-transcripts', format='orc', mode='append', partitionBy="seq_region_id")
            
-
+        
         result = self._spark.read.orc('tmp-transcripts').repartition(30).write.save(path='tmp-transcripts-final', format='orc', mode='overwrite')
 
         transcripts_with_seq = self._spark.read.orc('tmp-transcripts-final')
-        
         #Apply transcript edits
 
         edit_codes = ['_rna_edit']
         seq_edits = self._load_seq_edits_fs(db, user, password, edit_codes, tmp_folder)
         transcripts_with_seq = self.apply_edits(transcripts_with_seq, seq_edits)
+        
         transcripts_with_seq.write.orc("sequence_cdna", mode="overwrite")
-
+        # Next step should be done exactly after cdna is written to orc
+        transcripts_with_seq = transcripts_with_seq.filter(transcripts_with_seq.translation_stable_id.isNotNull())
+        
         #Translation start and end relative to seq start
         transcripts_with_seq =\
         transcripts_with_seq.withColumn("translation_region_start",

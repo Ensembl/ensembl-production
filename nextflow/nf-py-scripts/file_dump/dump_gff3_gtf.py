@@ -44,7 +44,7 @@ import os
 confi=SparkConf()
 confi.set("spark.executor.memory", "10g")
 confi.set("spark.driver.memory", "15g")
-confi.set("spark.cores.max", "1")
+confi.set("spark.cores.max", "3")
 confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
 confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
@@ -60,5 +60,6 @@ spark_session.sparkContext.setLogLevel("ERROR")
 #GFF features dump is in separate GFF service - becouse it is feature creation, automatic annotation - not just dump
 gff_service = GFFService(spark_session)
 features = gff_service.dump_all_features(url, username, pwd)
+
 gff_service.write_gff("./test_gff.gff", features)
 gff_service.write_gtf("./test_gtf.gtf", features, sequence + "/sequence")
