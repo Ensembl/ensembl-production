@@ -119,7 +119,7 @@ def gene_desc(locus_tag, desc):
         result = result + lines_break(desc, "FT                   ")
     return result
 
-@udf(returnType=BooleanType())
+@udf(returnType=StringType())
 def join_coord(coordinates):
     if (coordinates.find(",") < 0):
         return coordinates
@@ -208,6 +208,7 @@ transcripts = spark_session.read\
                 .load()
 
 exons = exon_service.load_exons_fs(url, username, pwd, "exons")
+
 region = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
