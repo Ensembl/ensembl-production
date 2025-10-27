@@ -20,7 +20,9 @@ pwd = ""
 
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
-from pyspark.sql.functions import concat, concat_ws, lit, expr, udf, regexp_replace, desc
+import sqlalchemy
+
+from pyspark.sql.functions import concat, concat_ws, col, lit, expr, udf, regexp_replace, desc
 import argparse
 from sqlalchemy import text
 from pyspark import SparkConf
@@ -87,11 +89,31 @@ assembly_level = spark_session.read\
 def split_seq(sequence):
     return ('\n').join((sequence[i:i+line_length]) for i in range(0, len(sequence), line_length)) + "\n"
 
-    
-dna_unmasked = dna.join(regions, on = ["seq_region_id"], how = "left_outer").withColumn("info", concat(\
+@udf(returnType=StringType())
+def apply_repeats(sequence, repeats):
+    repeats = repeats.split(" ")
+    result = ""
+    offset = 0
+    for repeat in repeats:
+        seq_region_start = int(repeat.split(":")[0]) - offset
+        seq_region_end = int(repeat.split(":")[1]) - offset
+        seq_start = seq_region_start - 1
+        if seq_region_end < 0:
+            continue
+        if seq_region_start <= 0:
+            seq_start = 0          
+        result = result + sequence[:seq_start] + sequence[seq_start:seq_region_end].lower()
+        sequence = sequence[seq_region_end:]
+        offset = seq_region_end
+    return result
+
+dna = dna.join(regions, on = ["seq_region_id"], how = "left_outer")
+dna_unmasked = dna.withColumn("info", concat(\
     lit(">") , "sr_name", lit(" unmasked:"), lit(assembly_level + " "), "name", lit(":"),\
         "version", lit(":"), "sr_name", lit(":1:"), "length", lit(":"), "rank"))\
-        .withColumn(sequence, split_seq("sequence"))
+        .withColumn("sequence", split_seq("sequence"))\
+        .orderBy("seq_region_id")\
+        .select("info", "sequence")
 
 dna_unmasked.repartition(1)\
     .write\
@@ -105,7 +127,7 @@ dna_unmasked.repartition(1)\
 file = glob.glob( "./fasta_unmasked"  + "/part-0000*")[0]
 
 f_cvs = open(file)
-f = open("unmasked.fa", "a")
+f = open("unmasked.fa", "w")
 file_line = f_cvs.readline()
 while file_line:
     if(file_line[0:1] == "$"):
@@ -117,8 +139,31 @@ while file_line:
 f_cvs.close()
 f.close()
 
+repeats = spark_session.read\
+        .format("jdbc")\
+        .option("driver", "com.mysql.cj.jdbc.Driver")\
+        .option("url", url)\
+        .option("dbtable", "(select * from repeat_feature where analysis_id in (select analysis_id from analysis join meta on meta.meta_value=analysis.logic_name and meta.meta_key=\"repeat.analysis\"))tmp")\
+        .option("user", username)\
+        .option("password", pwd)\
+        .load()
 
+file_service = FileSystemSparkService(spark_session)
+repeats = file_service.write_df_to_orc(repeats,
+                                            "repeats", "repeats")
+repeats = repeats.withColumn("ends", concat("seq_region_start", lit(":"), "seq_region_end"))
+repeats = repeats.groupBy("seq_region_id")\
+            .agg(concat_ws(" ",expr("""transform(sort_array(collect_list(struct(seq_region_id,ends)),True), x -> x.ends)"""))\
+                    .alias("ends"))
+repeats.show()
 
+dna_softmasked = dna.withColumn("info", concat(\
+    lit(">") , "sr_name", lit(" softmasked:"), lit(assembly_level + " "), "name", lit(":"),\
+        "version", lit(":"), "sr_name", lit(":1:"), "length", lit(":"), "rank"))\
+        .orderBy("seq_region_id")\
+        .select("seq_region_id", "info", "sequence")\
+        .join(repeats.select("seq_region_id", "ends"), on = ["seq_region_id"])
+dna_softmasked = file_service.write_df_to_orc(dna_softmasked,
+                                            "dna_softmasked", "dna_softmasked")
 
-
-
+dna_softmasked = dna_softmasked.withColumn("sequence", apply_repeats("sequence", "ends"))
