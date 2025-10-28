@@ -87,19 +87,11 @@ databases = (["abramis_brama_gca022829085v1_core_110_1", "GCA/000/001/405/29/ens
 // abramis_brama_gca022829085v1_core_110_1
 // homo_sapiens_core_116_38
 //tupaia_belangeri_core_116_1
-// Folder for the species is different for every species, so we pass ot over the pipeline
-// Base ftp folder and subfolders for the sequence is the same for all the secies so we don't need to pass it or change
-// so it is set up in parameters that are availbale in all the workflows
-Channel.of(databases) \
-// We need to build top level seq in the first place, as multi coord dbs doesn't have seq on the top feature level
-| BuildTopLevelSequence \
-// We can build feature seq  - now when we have sequnce at the same top level as features, 
-//and we can dump genome (top level) seq to files
-| BuildFeatureSequence | (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles & DumpGenomeFiles )
-// All other files need features to be build to dump feature level fasta, gtf gff and embl formats
 
+Channel.of(databases) | (BuildTopLevelSequence & DumpXrefFile & DumpChromosomeFile)
 
-Channel.of(databases) | (DumpXrefFile & DumpChromosomeFile)
+BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)
+DumpGenomeFiles(BuildTopLevelSequence.out)
  
 }
 

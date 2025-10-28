@@ -25,7 +25,6 @@ process DumpGenomeFiles {
   each db_name
   path output_dir
   path top_level_dir
-  path feature_dir
 
   output:
   stdout

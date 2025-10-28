@@ -939,7 +939,7 @@ class GFFService():
         rank_prev_pos = rank_prev_pos.withColumn("seq_region_start", rank_prev_pos["seq_region_end"] - 1 + rank_prev_pos["length"])
         rank_prev_neg = rank_prev.filter("seq_region_strand < 0")
         rank_prev_neg = rank_prev_neg.withColumn("seq_region_end", rank_prev_neg["seq_region_start"] + 1 - rank_prev_neg["length"])
-        
+
         rank_prev = rank_prev_neg.union(rank_prev_pos).drop("tiny_rank", "transcript_stable_id_old")
         rank_prev = rank_prev.withColumn("length", rank_prev.seq_region_end - rank_prev.seq_region_start).select(\
         "transcript_stable_id",\
@@ -1049,7 +1049,6 @@ class GFFService():
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
         normal_cds_neg = normal_cds.filter("seq_region_strand < 0")
         normal_cds_neg = normal_cds_neg.withColumn("seq_region_start", normal_cds_neg["seq_region_end"] - 2)
-
         
         start_codons = normal_cds_neg.drop("start_exon_id").union(normal_cds_pos.drop("start_exon_id")).union(rank_prev).union(small_cds.drop("start_exon_id"))
         start_codons = start_codons.drop("type")        
@@ -1492,15 +1491,14 @@ class GFFService():
         
         
         cds_neg = cds_neg.drop("seq_region_start").withColumn("seq_region_start", cds_neg.c_seq_region_end + 1)
+        
+        
         cds_neg = cds_neg.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
-      
-
         cds_pos = cds_pos.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
-        
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")      
         cds_only = cds_only.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
@@ -1523,8 +1521,6 @@ class GFFService():
         cds_croped = cds_croped.select("name", "source", "feature_type",
                 "seq_region_start", "seq_region_end",
                 "score", "seq_region_strand", "phase", "attributes", "transcript_stable_id", "rank", "exon_id")
-
-
 
 
         cds = cds.union(cds_croped)
