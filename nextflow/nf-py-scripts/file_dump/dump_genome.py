@@ -107,6 +107,25 @@ def apply_repeats(sequence, repeats):
         offset = seq_region_end
     return result
 
+@udf(returnType=StringType())
+def apply_repeats_hard(sequence, repeats):
+    repeats = repeats.split(" ")
+    result = ""
+    offset = 0
+    for repeat in repeats:
+        seq_region_start = int(repeat.split(":")[0]) - offset
+        seq_region_end = int(repeat.split(":")[1]) - offset
+        seq_start = seq_region_start - 1
+        if seq_region_end < 0:
+            continue
+        if seq_region_start <= 0:
+            seq_start = 0          
+        result = result + sequence[:seq_start] + "N"*(seq_region_end - seq_region_start)
+        sequence = sequence[seq_region_end:]
+        offset = seq_region_end
+    return result
+
+
 dna = dna.join(regions, on = ["seq_region_id"], how = "left_outer")
 dna_unmasked = dna.withColumn("info", concat(\
     lit(">") , "sr_name", lit(" unmasked:"), lit(assembly_level + " "), "name", lit(":"),\
@@ -155,7 +174,6 @@ repeats = repeats.withColumn("ends", concat("seq_region_start", lit(":"), "seq_r
 repeats = repeats.groupBy("seq_region_id")\
             .agg(concat_ws(" ",expr("""transform(sort_array(collect_list(struct(seq_region_id,ends)),True), x -> x.ends)"""))\
                     .alias("ends"))
-repeats.show()
 
 dna_softmasked = dna.withColumn("info", concat(\
     lit(">") , "sr_name", lit(" softmasked:"), lit(assembly_level + " "), "name", lit(":"),\
@@ -166,4 +184,63 @@ dna_softmasked = dna.withColumn("info", concat(\
 dna_softmasked = file_service.write_df_to_orc(dna_softmasked,
                                             "dna_softmasked", "dna_softmasked")
 
-dna_softmasked = dna_softmasked.withColumn("sequence", apply_repeats("sequence", "ends"))
+dna_softmasked = dna_softmasked.withColumn("sequence", apply_repeats("sequence", "ends")).select("info", "sequence")
+
+dna_softmasked.repartition(1)\
+    .write\
+    .mode('overwrite')\
+    .option("header", False)\
+    .option("escapeQuotes", False)\
+    .option("quote", "$")\
+    .option("quoteAll", False)\
+    .option("delimiter", "\n")\
+    .csv("./fasta_softmasked")
+file = glob.glob( "./fasta_softmasked"  + "/part-0000*")[0]
+
+f_cvs = open(file)
+f = open("softmasked.fa", "w")
+file_line = f_cvs.readline()
+while file_line:
+    if(file_line[0:1] == "$"):
+        file_line = file_line[1:]
+    if(file_line[-2:-1] == "$"):
+        file_line = file_line[:-2] + "\n"
+    f.write(file_line)
+    file_line = f_cvs.readline()
+f_cvs.close()
+f.close()
+
+dna_hardmasked = dna.withColumn("info", concat(\
+    lit(">") , "sr_name", lit(" softmasked:"), lit(assembly_level + " "), "name", lit(":"),\
+        "version", lit(":"), "sr_name", lit(":1:"), "length", lit(":"), "rank"))\
+        .orderBy("seq_region_id")\
+        .select("seq_region_id", "info", "sequence")\
+        .join(repeats.select("seq_region_id", "ends"), on = ["seq_region_id"])
+dna_hardmasked = file_service.write_df_to_orc(dna_hardmasked,
+                                            "dna_hardmasked", "dna_hardmasked")
+
+dna_hardmasked = dna_hardmasked.withColumn("sequence", apply_repeats_hard("sequence", "ends")).select("info", "sequence")
+
+dna_hardmasked.repartition(1)\
+    .write\
+    .mode('overwrite')\
+    .option("header", False)\
+    .option("escapeQuotes", False)\
+    .option("quote", "$")\
+    .option("quoteAll", False)\
+    .option("delimiter", "\n")\
+    .csv("./fasta_hardmasked")
+file = glob.glob( "./fasta_hardmasked"  + "/part-0000*")[0]
+
+f_cvs = open(file)
+f = open("hardmasked.fa", "w")
+file_line = f_cvs.readline()
+while file_line:
+    if(file_line[0:1] == "$"):
+        file_line = file_line[1:]
+    if(file_line[-2:-1] == "$"):
+        file_line = file_line[:-2] + "\n"
+    f.write(file_line)
+    file_line = f_cvs.readline()
+f_cvs.close()
+f.close()
