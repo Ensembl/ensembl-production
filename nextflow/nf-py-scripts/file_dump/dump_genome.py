@@ -83,7 +83,12 @@ assembly_level = spark_session.read\
             .option("dbtable", "(select meta_value from meta where meta_key=\"assembly.level\")tmp")\
             .option("user", username)\
             .option("password", pwd)\
-            .load().collect()[0][0]
+            .load().collect()
+
+if (len(assembly_level) > 0):
+    assembly_level = assembly_level[0][0]
+else: 
+    assembly_level = "chromosome"
 
 @udf(returnType=StringType())
 def split_seq(sequence):
