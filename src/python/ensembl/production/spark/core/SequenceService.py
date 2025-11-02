@@ -75,12 +75,62 @@ class SequenceService:
             .option("password", password)\
             .load().dropDuplicates()
 
+        y_region_id = self._spark.read\
+            .format("jdbc")\
+            .option("driver", "com.mysql.cj.jdbc.Driver")\
+            .option("url", db)\
+            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"Y\" and cs.rank = 1)tmp")\
+            .option("user", user)\
+            .option("password", password)\
+            .load().dropDuplicates().collect()[0].seq_region_id
+        x_region_id = self._spark.read\
+            .format("jdbc")\
+            .option("driver", "com.mysql.cj.jdbc.Driver")\
+            .option("url", db)\
+            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"X\" and cs.rank = 1)tmp")\
+            .option("user", user)\
+            .option("password", password)\
+            .load().dropDuplicates().collect()[0].seq_region_id
+        
         url = "mysql://" + user + "@" + db.split("//")[1]
         if (len(password) > 0):
             url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
         engine = sqlalchemy.create_engine(url)
 
         with engine.connect() as conn:
+            def get_region_sequence_assembled(seq_id):
+                query = text("select d.sequence, a.asm_start, a.asm_end, a.cmp_start, a.cmp_end from assembly a join dna d on d.seq_region_id=a.cmp_seq_region_id where a.asm_seq_region_id=" + str(seq_id) + " order by a.asm_start")
+                exe = conn.execute(query)
+                results = exe
+                sequence = ""
+                prev_end = 0
+                for res in results:
+                    gap = res.asm_start - prev_end - 1 
+                    prev_end = res.asm_end       
+                    sequence = sequence + "N"*gap + res.sequence[res.cmp_start-1:res.cmp_end]
+                return sequence
+
+            #PARs regions
+            if (len(assembly_GRCh38) > 0):
+                #Creating x region
+                x_seq = get_region_sequence_assembled(x_region_id)
+                x_seq = "N"*10000 + "sequence"
+                schema = StructType([StructField("seq_region_id", IntegerType(), True),
+                    StructField("sequence", StringType(), True)]
+                    )
+                region_df = self._spark.createDataFrame([(int(x_region_id), str(x_seq))], schema)
+                region_df.write.save(path=path_top, format='orc', mode='append', partitionBy="seq_region_id")
+
+                #Creating y region
+                y_seq = get_region_sequence_assembled(y_region_id)
+                y_seq = x_seq[:2781479] + y_seq[0:54106423]\
+                    + x_seq[155701382:156030895] + y_seq[54106423:]
+                schema = StructType([StructField("seq_region_id", IntegerType(), True),
+                    StructField("sequence", StringType(), True)]
+                    )
+                region_df = self._spark.createDataFrame([(int(y_region_id), str(y_seq))], schema)
+                region_df.write.save(path=path_top, format='orc', mode='append', partitionBy="seq_region_id")
+
             data_collect = regions.collect()
             for row in data_collect:
                 seq_id = str(row.seq_region_id)
@@ -90,64 +140,19 @@ class SequenceService:
                     results = exe.scalars().all()
                     if(results is None):
                         continue
-                    result = ""
+                    sequence = ""
                     for res in results:
-                        result = res
+                        sequence = res
                 else:
-                    query = text("select d.sequence, a.asm_start, a.asm_end, a.cmp_start, a.cmp_end from assembly a join dna d on d.seq_region_id=a.cmp_seq_region_id where a.asm_seq_region_id=" + seq_id + " order by a.asm_start")
-                    exe = conn.execute(query)
-                    results = exe
-                    if(results is None):
+                    # If its par regions - we already done it
+                    if (len(assembly_GRCh38) > 0) and ((seq_id == x_region_id) or (seq_id == y_region_id)):
                         continue
-                    result = ""
-                    prev_end = 0
-                    
-                    # Here is an algorythm to concat dna sequnce from
-                    # corresponding letters, probably it worth implementing in spark
-                    for res in results:
-                        gap = res.asm_start - prev_end - 1 
-                        prev_end = res.asm_end       
-                        result = result + "N"*gap + res.sequence[res.cmp_start-1:res.cmp_end]
+                    sequence = get_region_sequence_assembled(seq_id)
 
                 schema = StructType([StructField("seq_region_id", IntegerType(), True),
                      StructField("sequence", StringType(), True)]
                      )
-                region_df = self._spark.createDataFrame([(int(seq_id), str(result))], schema)
-                region_df.write.save(path=path_top + "-tmp", format='orc', mode='append', partitionBy="seq_region_id")
-            
-            dna = self._spark.read.orc(path_top + "-tmp")
-            dna.write.save(path=path_top, format='orc', mode='overwrite', partitionBy="seq_region_id")
-
-            @udf(returnType=StringType())
-            def make_y(sequence_y, sequence_x):
-             return "N"*10000 + sequence_x[10000:2781479] + sequence_y[0:54106423]\
-                    + sequence_x[155701382:156030895] + sequence_y[54106423:]
-            
-            #PARs region in human
-            if (len(assembly_GRCh38) > 0):
-
-                y_region_id = self._spark.read\
-                    .format("jdbc")\
-                    .option("driver", "com.mysql.cj.jdbc.Driver")\
-                    .option("url", db)\
-                    .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"Y\" and cs.rank = 1)tmp")\
-                    .option("user", user)\
-                    .option("password", password)\
-                    .load().dropDuplicates().collect()[0].seq_region_id
-                x_region_id = self._spark.read\
-                    .format("jdbc")\
-                    .option("driver", "com.mysql.cj.jdbc.Driver")\
-                    .option("url", db)\
-                    .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"X\" and cs.rank = 1)tmp")\
-                    .option("user", user)\
-                    .option("password", password)\
-                    .load().dropDuplicates().collect()[0].seq_region_id
-                dna = self._spark.read.orc(path_top + "-tmp")
-                dna = dna.withColumn("sequence").when(col("seq_region_id") == x_region_id, concat(lit("N"*10000),"sequence")).otherwise("sequence")
-                sequence_x = dna.filter(col("seq_region_id") == x_region_id).select("sequence").collect()[0]
-                dna = dna.withColumn("sequence").when(col("seq_region_id") == y_region_id, make_y("sequence", sequence_x)).otherwise("sequence")
-                
-                dna.write.save(path=path_top, format='orc', mode='overwrite', partitionBy="seq_region_id")
-
+                region_df = self._spark.createDataFrame([(int(seq_id), str(sequence))], schema)
+                region_df.write.save(path=path_top, format='orc', mode='append', partitionBy="seq_region_id")
         return 0
  

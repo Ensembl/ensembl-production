@@ -340,7 +340,7 @@ class TranscriptSparkService:
             .load().dropDuplicates()
         regions_plain = regions.collect()
         #If we have tiny regions, we should group regions before dump on disk, not to have huge amount of tiny files
-        tiny_regions = len(regions_plain) > 100
+        tiny_regions = len(regions_plain) > 200
         i = 0
         for region in regions_plain:
             codon_table = 1
@@ -415,7 +415,9 @@ class TranscriptSparkService:
             else:
                 transcripts_with_seq.write.save(path='tmp-transcripts', format='orc', mode='append', partitionBy="seq_region_id")
            
-        
+
+        if (i > 0):
+            result.write.save(path='tmp-transcripts', format='orc', mode='append', partitionBy="seq_region_id") 
         result = self._spark.read.orc('tmp-transcripts').repartition(30).write.save(path='tmp-transcripts-final', format='orc', mode='overwrite')
 
         transcripts_with_seq = self._spark.read.orc('tmp-transcripts-final')

@@ -83,10 +83,16 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = (["abramis_brama_gca022829085v1_core_110_1", "GCA/000/001/405/29/ensembl/2025"])
+databases = (["homo_sapiens_core_116_38", "GCA/000/001/405/28/ensembl/2029"])
 // abramis_brama_gca022829085v1_core_110_1
 // homo_sapiens_core_116_38
-//tupaia_belangeri_core_116_1
+// tupaia_belangeri_core_116_1
+// homo_sapiens_gca009914755v4_core_110_1
+
+//GenomeInfoProcess(metadataDBConnStr)
+//| splitText
+//| combine(Channel.of(speciesDBConnStr))
+//| view
 
 Channel.of(databases) | (BuildTopLevelSequence & DumpXrefFile & DumpChromosomeFile)
 
