@@ -15,16 +15,10 @@
 /*
 * NextFlow File dump Pipeline generate FTP Core and Variation Dumps Files 
 */
-
+import groovy.json.JsonSlurper
  
 //global variables default values
-params.species            = "''"
-params.division           = "''"
-params.antispecies        = "''"
-params.meta_filters       = "''"
-params.group              = 'core'
-params.core_filetype      = "embl,tsv,genbank,gtf,gff3,json,fasta_pep,fasta_cdna,fasta_cds,fasta_dna,fasta_dna_index,vep"
-params.variation_filetype = "vcf,gvf"  
+params.metadata_db        = ""
 params.output             = ""
 params.ftp_path           = ""
 params.base_dir           = "$BASE_DIR"
@@ -39,7 +33,7 @@ params.gff_gtf_dir        = "fasta"
 params.embl_dir           = "fasta"
 params.xref_dir           = "fasta"
 params.genome_fa_dir      = "fasta"
-
+params.factory_path       = "$BASE_DIR/ensembl-metadata-api/src/ensembl/production/metadata/api/factories/genomes.py"
 
 // Import Production Common Factories
 include { DumpFastaFiles } from './genset_fasta.nf'
@@ -83,22 +77,58 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = (["homo_sapiens_core_116_38", "GCA/000/001/405/28/ensembl/2029"])
+
+databases = (["tupaia_belangeri_core_116_1", "GCA/000/001/405/28/ensembl/2030"])
 // abramis_brama_gca022829085v1_core_110_1
 // homo_sapiens_core_116_38
 // tupaia_belangeri_core_116_1
 // homo_sapiens_gca009914755v4_core_110_1
 
-//GenomeInfoProcess(metadataDBConnStr)
-//| splitText
-//| combine(Channel.of(speciesDBConnStr))
-//| view
+speciesDBConnStr = params.speciesdb_key
 
-Channel.of(databases) | (BuildTopLevelSequence & DumpXrefFile & DumpChromosomeFile)
+GenomeInfoProcess(params.metadata_db)
+| splitText
+| (BuildTopLevelSequence & DumpXrefFile & DumpChromosomeFile)
 
-BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)
-DumpGenomeFiles(BuildTopLevelSequence.out)
+//BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)
+//DumpGenomeFiles(BuildTopLevelSequence.out)
  
+}
+
+process GenomeInfoProcess {
+    /*
+      Description: Fetch the genome information from the ensembl production
+      metadata-api and write as JSON.
+    */
+
+    if (params.debug) {
+        debug params.debug
+        errorStrategy 'terminate'
+    }
+    label 'mem1GB'
+    tag 'genomeinfo'
+    publishDir "${params.output_path}", mode: 'copy', overWrite: true
+
+    input:
+    val dbconn
+
+    output:
+    path 'genome_info.json'
+
+    script:
+    g_uuid = params.genome_uuid ? "--genome_uuid " + convertToList(params.genome_uuid).join(" ") : ""
+    e_release_id = params.release_id ? "--release_id " + params.release_id : ""
+
+    """
+    python ${params.factory_path} \
+        --metadata_db_uri ${dbconn} \
+        --output genome_info.json \
+        --batch_size 0 \
+        --dataset_status ${params.factory_selector} \
+        --dataset_type genebuild \
+        ${g_uuid} \
+        ${e_release_id}
+    """
 }
 
 workflow.onComplete {

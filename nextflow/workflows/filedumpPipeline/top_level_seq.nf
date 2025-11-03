@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+import groovy.json.JsonSlurper
 process BuildTopLevelSequence {
 
   debug 'true'
@@ -22,19 +22,26 @@ process BuildTopLevelSequence {
   publishDir "${params.ftp_path}/${db_name[1]}", mode: 'copy'
 
   input: 
-  each db_name
+  each input
 
   output:
   stdout
-  path "${db_name[1]}"
+  path "${input}"
   path "${params.top_level_dir}"
 
   //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
   //Dont change it until it complies with fasta dump
+
+  script:
+  jsonS = new JsonSlurper()
+  confJson = jsonS.parseText(input)
+  species = confJson.species
+  db_name = confJson.dataset_source
+
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/top_level_sequence_build.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name[0]} --output_dir ${params.top_level_dir} && mkdir -p ${db_name[1]} && echo -n ${db_name[0]}
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --output_dir ${params.top_level_dir} && mkdir -p ${db_name} && echo -n ${db_name}
   """
 }
