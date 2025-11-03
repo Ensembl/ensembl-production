@@ -82,7 +82,7 @@ class SequenceService:
             .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"Y\" and cs.rank = 1)tmp")\
             .option("user", user)\
             .option("password", password)\
-            .load().dropDuplicates().collect()[0].seq_region_id
+            .load().dropDuplicates()
         x_region_id = self._spark.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
@@ -90,7 +90,7 @@ class SequenceService:
             .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"X\" and cs.rank = 1)tmp")\
             .option("user", user)\
             .option("password", password)\
-            .load().dropDuplicates().collect()[0].seq_region_id
+            .load().dropDuplicates()
         
         url = "mysql://" + user + "@" + db.split("//")[1]
         if (len(password) > 0):
@@ -113,6 +113,9 @@ class SequenceService:
             #PARs regions
             if (len(assembly_GRCh38) > 0):
                 #Creating x region
+                x_region_id = x_region_id.collect()[0].seq_region_id
+                y_region_id = y_region_id.collect()[0].seq_region_id
+
                 x_seq = get_region_sequence_assembled(x_region_id)
                 x_seq = "N"*10000 + "sequence"
                 schema = StructType([StructField("seq_region_id", IntegerType(), True),
