@@ -25,12 +25,14 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--output_dir', action="store", dest='output_dir', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
 pwd = args.password
 username = args.username
 url = args.db
+species = args.species
 base_dir = args.base_dir
 output_dir = args.output_dir
 
@@ -47,7 +49,7 @@ spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi)
 spark_session.sparkContext.setLogLevel("ERROR")
 
 sequence_service = SequenceService(spark_session)
-fasta_df = sequence_service.build_top_level_seq(url,  username, pwd, output_dir)
+fasta_df = sequence_service.build_top_level_seq(url,  username, pwd, species, output_dir)
 
 
 

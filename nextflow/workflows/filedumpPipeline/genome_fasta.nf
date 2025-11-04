@@ -20,6 +20,7 @@ process DumpGenomeFiles {
   tag "${db_name}-dump_genome"
   errorStrategy 'finish'
   publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
+  maxForks 1
 
   input:
   each db_name

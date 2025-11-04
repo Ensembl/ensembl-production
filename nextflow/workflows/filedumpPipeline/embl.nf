@@ -20,7 +20,8 @@ process DumpEMBLFiles {
   errorStrategy 'finish'
   publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
   tag "${db_name}-dump_embl"
-
+  maxForks 1
+  
   input:
   each db_name
   path output_dir

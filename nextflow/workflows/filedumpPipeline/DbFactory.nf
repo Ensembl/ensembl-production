@@ -19,6 +19,7 @@ process DbFactory {
   label 'mem20GB'
   errorStrategy 'finish'
   tag "${db_name}-top_level_sequence_build"
+  maxForks 1
 
   input: 
   val(db_name)

@@ -20,6 +20,7 @@ process BuildFeatureSequence {
   errorStrategy 'finish'
   tag "${db_name}-feature_sequence_build"
   publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
+  maxForks 1
 
   input: 
   each db_name

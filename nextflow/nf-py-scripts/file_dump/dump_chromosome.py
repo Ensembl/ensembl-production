@@ -32,6 +32,7 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--sequence', action="store", dest='sequence', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -40,6 +41,7 @@ username = args.username
 url = args.db
 base_dir = args.base_dir
 sequence = args.sequence
+species = args.species
 
 import os
 
@@ -69,7 +71,7 @@ with engine.connect() as conn:
             print(str(row.meta_value))
             assembly_level = str(row.meta_value)
     if (assembly_level == "chromosome"):
-      query = text("select sr.* from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id right join seq_region_attrib sa on sa.seq_region_id = sr.seq_region_id where cs.rank=1 and sa.attrib_type_id=367 order by sr.seq_region_id")
+      query = text("select sr.* from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id right join seq_region_attrib sa on sa.seq_region_id = sr.seq_region_id where cs.rank=1 and sa.attrib_type_id=367 order by sr.seq_region_id  and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")
       regions = conn.execute(query)
       for region in regions:
         seq_id = str(region.name)

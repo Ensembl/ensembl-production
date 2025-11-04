@@ -35,6 +35,7 @@ parser.add_argument('--password', action="store", dest='password', default="")
 parser.add_argument('--username', action="store", dest='username', default="ensro")
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -42,15 +43,13 @@ pwd = args.password
 username = args.username
 url = args.db
 base_dir = args.base_dir
-
+species = args.species
 import os
 confi=SparkConf()
 confi.set("spark.executor.memory", "10g")
 confi.set("spark.driver.memory", "15g")
 confi.set("spark.cores.max", "1")
 confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
-confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
-confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
 confi.set("spark.driver.maxResultSize", "3G")
 confi.set("spark.ui.showConsoleProgress", "false")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
@@ -84,7 +83,8 @@ gene_xref = spark_session.read\
       external_db e2 on x2.external_db_id = e2.external_db_id
     where
       ox.ensembl_object_type = "Gene" and
-      e.db_display_name <> "GO"
+      e.db_display_name <> "GO" and
+      g.seq_region_id in (select seq_region_id from seq_region sr join coord_system cs on sr.coord_system_id = cs.coord_system_id and cs.species_id = (select species_id from meta where meta_value=\"{species_name}\" and meta_key=\"organism.production_name\"))
     group by
       g.stable_id,
       x.dbprimary_acc,
@@ -92,7 +92,7 @@ gene_xref = spark_session.read\
       x.description,
       e.db_display_name,
       ix.ensembl_identity,
-      ix.xref_identity""")\
+      ix.xref_identity""".format(species_name=species))\
             .option("user", username)\
             .option("password", pwd)\
             .load().withColumn("transcript_stable_id", lit("")).withColumn("protein_stable_id", lit(""))
@@ -127,7 +127,8 @@ select
       external_db e2 on x2.external_db_id = e2.external_db_id
     where
       ox.ensembl_object_type = "Transcript" and
-      e.db_display_name <> "GO"
+      e.db_display_name <> "GO" and
+      g.seq_region_id in (select seq_region_id from seq_region sr join coord_system cs on sr.coord_system_id = cs.coord_system_id and cs.species_id = (select species_id from meta where meta_value=\"{species_name}\" and meta_key=\"organism.production_name\"))
     group by
       g.stable_id,
       t.stable_id,
@@ -138,7 +139,7 @@ select
       e.db_display_name,
       ix.ensembl_identity,
       ix.xref_identity
-""")\
+""".format(species_name=species))\
             .option("user", username)\
             .option("password", pwd)\
             .load()
@@ -174,7 +175,8 @@ select
       external_db e2 on x2.external_db_id = e2.external_db_id
     where
       ox.ensembl_object_type = "Translation" and
-      e.db_display_name <> "GO"
+      e.db_display_name <> "GO" and
+      g.seq_region_id in (select seq_region_id from seq_region sr join coord_system cs on sr.coord_system_id = cs.coord_system_id and cs.species_id = (select species_id from meta where meta_value=\"{species_name}\" and meta_key=\"organism.production_name\"))
     group by
       g.stable_id,
       t.stable_id,
@@ -185,7 +187,7 @@ select
       e.db_display_name,
       ix.ensembl_identity,
       ix.xref_identity
-""")\
+""".format(species_name=species))\
             .option("user", username)\
             .option("password", pwd)\
             .load()
@@ -217,7 +219,8 @@ select
       external_db e2 on x2.external_db_id = e2.external_db_id
     where
       ox.ensembl_object_type = "Transcript" and
-      e.db_display_name = "GO" 
+      e.db_display_name = "GO" and
+      g.seq_region_id in (select seq_region_id from seq_region sr join coord_system cs on sr.coord_system_id = cs.coord_system_id and cs.species_id = (select species_id from meta where meta_value=\"{species_name}\" and meta_key=\"organism.production_name\"))
     group by
       g.stable_id,
       t.stable_id,
@@ -226,7 +229,7 @@ select
       x.display_label,
       x.description,
       e.db_display_name
-""")\
+""".format(species_name=species))\
             .option("user", username)\
             .option("password", pwd)\
             .load()\

@@ -20,6 +20,7 @@ process DumpGFF3_GTFFiles {
   errorStrategy 'finish'
   publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
   tag "${db_name}-dump_gff_gtf"
+  maxForks 1
 
   input:
   each db_name

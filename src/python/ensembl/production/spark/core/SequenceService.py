@@ -40,7 +40,7 @@ class SequenceService:
     """
     Creates a sequence on top level (features level) from contig level, write to file
     """
-    def build_top_level_seq(self, db: str, user: str, password: str, path_top = ""):
+    def build_top_level_seq(self, db: str, user: str, password: str, species = "", path_top = ""):
         
         #Get all transcripts seq_regions
         #Select seq_region_id from transcript group by seq_region_id
@@ -70,7 +70,7 @@ class SequenceService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank = 1)tmp")\
+            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank = 1 and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\"))tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
@@ -79,7 +79,7 @@ class SequenceService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"Y\" and cs.rank = 1)tmp")\
+            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"Y\" and cs.rank = 1 and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\"))tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
@@ -87,7 +87,7 @@ class SequenceService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"X\" and cs.rank = 1)tmp")\
+            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id=sr.coord_system_id where sr.name = \"X\" and cs.rank = 1 and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\"))tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()

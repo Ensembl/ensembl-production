@@ -20,6 +20,7 @@ process DumpFastaFiles {
   tag "${db_name}-dump_fasta"
   errorStrategy 'finish'
   publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
+  maxForks 1
 
   input:
   each db_name

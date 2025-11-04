@@ -18,30 +18,26 @@ process BuildTopLevelSequence {
   debug 'true'
   label 'mem20GB'
   errorStrategy 'finish'
-  tag "${db_name[0]}-top_level_sequence_build"
-  publishDir "${params.ftp_path}/${db_name[1]}", mode: 'copy'
-
+  tag "${db_name}-top_level_sequence_build"
+  publishDir "${params.output_path}/${species}", mode: 'copy', overWrite: true
+  maxForks 1
+  
   input: 
-  each input
+  val dataset
 
   output:
-  stdout
-  path "${input}"
+  val "${dataset}"
   path "${params.top_level_dir}"
-
-  //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
-  //Dont change it until it complies with fasta dump
 
   script:
   jsonS = new JsonSlurper()
-  confJson = jsonS.parseText(input)
+  confJson = jsonS.parseText(dataset)
   species = confJson.species
   db_name = confJson.dataset_source
 
   """
-  export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/top_level_sequence_build.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --output_dir ${params.top_level_dir} && mkdir -p ${db_name} && echo -n ${db_name}
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --output_dir ${params.top_level_dir} --species ${species}
   """
 }

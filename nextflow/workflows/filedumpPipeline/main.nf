@@ -78,16 +78,10 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         exit 1
 }
 
-databases = (["tupaia_belangeri_core_116_1", "GCA/000/001/405/28/ensembl/2030"])
-// abramis_brama_gca022829085v1_core_110_1
-// homo_sapiens_core_116_38
-// tupaia_belangeri_core_116_1
-// homo_sapiens_gca009914755v4_core_110_1
-
 speciesDBConnStr = params.speciesdb_key
 
 GenomeInfoProcess(params.metadata_db)
-| splitText
+| splitText (limit: 1)
 | (BuildTopLevelSequence & DumpXrefFile & DumpChromosomeFile)
 
 //BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)
