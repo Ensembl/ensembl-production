@@ -12,32 +12,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import groovy.json.JsonSlurper
+process GenerateFolderStructure {
 
-process DumpChromosomeFile {
-
-  debug 'ture'
-  label 'mem2GB'
-  tag "${db_name}-dump_xref"
+  debug 'true'
+  label 'mem1GB'
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${output_folder}/genset", mode: 'copy', overWrite: true
-  maxForks 1
+  tag "${db_name}-generate-folder-structure"
   
   input: 
   val dataset
-  val output_folder
 
   output:
-  path "chromosomes.tsv", optional: true
+  val "${dataset}"
+  stdout
 
   script:
   jsonS = new JsonSlurper()
-  confJson = jsonS.parseText(dataset)
+  def confJson = jsonS.parseText(dataset)
   species = confJson.species
   db_name = confJson.dataset_source
-
-  """
-  ${params.nf_py_script_path}file_dump/dump_chromosome.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --species ${species}
-  """
+  """${params.nf_py_script_path}file_dump/generate_output_path.py --species ${species}  --username ${params.user} --password ${params.password} --db ${params.server}/${db_name}"""
 }

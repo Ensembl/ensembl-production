@@ -18,12 +18,9 @@ url =\
 username = "ensro"
 pwd = ""
 
-from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
-from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
 import sqlalchemy
 import argparse
 from sqlalchemy import text
-
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Fasta files dump')

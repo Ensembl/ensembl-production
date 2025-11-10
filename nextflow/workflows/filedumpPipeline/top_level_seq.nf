@@ -24,10 +24,11 @@ process BuildTopLevelSequence {
   
   input: 
   val dataset
+  val output_folder
 
   output:
-  val "${dataset}"
-  path "${params.top_level_dir}"
+  stdout
+  val "${output_folder}"
 
   script:
   jsonS = new JsonSlurper()
@@ -38,6 +39,7 @@ process BuildTopLevelSequence {
   """
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/top_level_sequence_build.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --output_dir ${params.top_level_dir} --species ${species}
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --output_dir ${params.top_level_dir} --species ${species}\
+    && ${params.nf_py_script_path}file_dump/generate_output_path.py --dataset ${dataset}
   """
 }

@@ -27,12 +27,6 @@ params.password           = ""
 params.top_level_dir      = "top_level_seq"
 params.feature_seq_dir    = "sequence"
 // Files subfolders, inside spicies folder
-params.pep_fa_dir         = "fasta"
-params.cdna_fa_dir        = "fasta"
-params.gff_gtf_dir        = "fasta"
-params.embl_dir           = "fasta"
-params.xref_dir           = "fasta"
-params.genome_fa_dir      = "fasta"
 params.factory_path       = "$BASE_DIR/ensembl-metadata-api/src/ensembl/production/metadata/api/factories/genomes.py"
 
 // Import Production Common Factories
@@ -44,6 +38,7 @@ include { DumpChromosomeFile } from './chromosome.nf'
 include { DumpGenomeFiles } from './genome_fasta.nf'
 include { BuildTopLevelSequence } from './top_level_seq.nf'
 include { BuildFeatureSequence } from './feature_seq.nf'
+include { GenerateFolderStructure } from './ftp_structure.nf'
 
 include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
  
@@ -82,6 +77,7 @@ speciesDBConnStr = params.speciesdb_key
 
 GenomeInfoProcess(params.metadata_db)
 | splitText (limit: 1)
+| GenerateFolderStructure 
 | (BuildTopLevelSequence & DumpXrefFile & DumpChromosomeFile)
 
 //BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)

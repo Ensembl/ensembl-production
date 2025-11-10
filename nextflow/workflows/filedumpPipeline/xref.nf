@@ -20,12 +20,12 @@ process DumpXrefFile {
   label 'mem2GB'
   tag "${db_name}-dump_xref"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name}", mode: 'copy', overWrite: true
+  publishDir "${params.ftp_path}/${output_folder}/genset", mode: 'copy', overWrite: true
   maxForks 1
   
   input: 
   val dataset
-
+  val output_folder
   output:
   path "xref.tsv"
 
@@ -38,7 +38,6 @@ process DumpXrefFile {
   """
   ${params.nf_py_script_path}file_dump/dump_xref.py --base_dir=${BASE_DIR}\
    --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --species ${species}
-
   """
 
 }
