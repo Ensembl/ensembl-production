@@ -95,7 +95,7 @@ class ExonSparkService:
     Returns exons dataframe with sequence column
     For now exon sequence is used only to build transcrpt sequence, so we drop all unnecessary columns early
     """
-    def exons_with_seq(self, db: str, user: str, password: str,
+    def exons_with_seq(self, db: str, user: str, password: str, species,
                        top_level_seq, tmp_folder="tmp/"):
 
         exons_raw = self.load_exons_fs(db, user, password, tmp_folder)\
@@ -105,7 +105,7 @@ class ExonSparkService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1)tmp")\
+            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1 and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\"))tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()

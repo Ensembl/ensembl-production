@@ -12,6 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import groovy.json.JsonSlurper
 
 process BuildFeatureSequence {
 
@@ -19,27 +20,28 @@ process BuildFeatureSequence {
   label 'mem20GB'
   errorStrategy 'finish'
   tag "${db_name}-feature_sequence_build"
-  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
   maxForks 1
 
   input: 
-  each db_name
-  path output_dir
+  val dataset
+  val output_folder
   path top_level_dir
 
   output:
-  stdout
-  path "${output_dir}"
-  path "${top_level_dir}"
-  path "${db_name}/${params.feature_seq_dir}"
+  val "${dataset}"
+  val "${output_folder}"
+  path "${params.feature_seq_dir}"
 
+  script:
+  jsonS = new JsonSlurper()
+  confJson = jsonS.parseText(dataset)
+  species = confJson.species
+  db_name = confJson.dataset_source
 
-  //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
-  //Dont change it until it complies with fasta dump
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/feature_sequence_build.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --top_level_seq ${top_level_dir} --output_dir ${db_name}/${params.feature_seq_dir} && echo -n ${db_name}
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --top_level_seq ${top_level_dir} --species ${species} --output_dir ${params.feature_seq_dir}
   """
 }

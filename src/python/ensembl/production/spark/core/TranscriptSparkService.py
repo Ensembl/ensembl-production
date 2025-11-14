@@ -190,10 +190,10 @@ class TranscriptSparkService:
     """
     Returns transcripts with translatable sequence
     """
-    def translatable_seq(self, db: str, user: str, password: str,
+    def translatable_seq(self, db: str, user: str, password: str, species: str,
                          top_level_seq=None, keep_seq=False):
          transcripts_with_seq = self.transcripts_translation_sequence(db, user,
-                                                                     password,
+                                                                     password, species,
                                                                     top_level_seq)
 
          @udf(returnType=StringType())
@@ -227,8 +227,8 @@ class TranscriptSparkService:
 
          return transcripts_with_seq
 
-    def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False, top_level_seq = None):
-         translated_seq = self.translatable_seq(db, user, password, top_level_seq, keep_seq)
+    def translated_seq(self, db: str, user: str, password: str, species: str, exons_df=None, keep_seq=False, top_level_seq = None):
+         translated_seq = self.translatable_seq(db, user, password, species, top_level_seq, keep_seq)
          @udf(returnType=StringType())
          def translate_sequence(raw_sequence, codon_table, phase):
              #Normalize phase and codon table
@@ -293,7 +293,7 @@ class TranscriptSparkService:
     Returns transcript with translation and  whole sequence
     This function now is used only to build transcripts sequnce, so most columns can be ignored
     """
-    def transcripts_translation_sequence(self, db: str, user: str, password: str,
+    def transcripts_translation_sequence(self, db: str, user: str, password: str, species,
                          top_level_seq=None, tmp_folder=None):
         transcripts = self.load_transcripts_fs(db, user,
                                                 password, tmp_folder)
@@ -301,7 +301,7 @@ class TranscriptSparkService:
         if (top_level_seq != None):
             exon_service = ExonSparkService(self._spark)
             exons_df = exon_service.exons_with_seq(db,  user,\
-                                                   password, top_level_seq).repartition(10)
+                                                   password, species, top_level_seq).repartition(10)
             if (exons_df == None):
                 return
 
@@ -333,8 +333,8 @@ class TranscriptSparkService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select distinct t.seq_region_id, sr.name, sra.value, sr.length from transcript t left join seq_region sr on t.seq_region_id= sr.seq_region_id left join seq_region_attrib sra on sra.seq_region_id = t.seq_region_id \
-                    and sra.attrib_type_id = 11)tmp")\
+            .option("dbtable", "(select distinct t.seq_region_id, sr.name, sra.value, sr.length from transcript t left join seq_region sr on t.seq_region_id = sr.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id left join seq_region_attrib sra on sra.seq_region_id = t.seq_region_id \
+                    and sra.attrib_type_id = 11 where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\"))tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()

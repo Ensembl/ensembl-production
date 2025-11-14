@@ -12,6 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import groovy.json.JsonSlurper
 
 process DumpFastaFiles {
 
@@ -19,27 +20,31 @@ process DumpFastaFiles {
   label 'mem20GB'
   tag "${db_name}-dump_fasta"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
+  publishDir "${params.ftp_path}/${output_folder}/genset", mode: 'copy'
   maxForks 1
 
-  input:
-  each db_name
-  path output_dir
-  path top_level_dir
-  path feature_dir
+  input: 
+  val dataset
+  val output_folder
+  path feature_seq
 
 
   output:
-  stdout
   path "pep.fa"
   path "cdna.fa"
+
+  script:
+  jsonS = new JsonSlurper()
+  confJson = jsonS.parseText(dataset)
+  species = confJson.species
+  db_name = confJson.dataset_source
 
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
 
   ${params.nf_py_script_path}/file_dump/dump_fasta.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --sequence ${feature_dir} && echo -n ${db_name}
+   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --sequence ${feature_seq} --species ${feature_seq}
 
   """
 

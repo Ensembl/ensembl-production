@@ -26,6 +26,7 @@ params.password           = ""
 // Temp sequnce directories
 params.top_level_dir      = "top_level_seq"
 params.feature_seq_dir    = "sequence"
+
 // Files subfolders, inside spicies folder
 params.factory_path       = "$BASE_DIR/ensembl-metadata-api/src/ensembl/production/metadata/api/factories/genomes.py"
 
@@ -80,7 +81,7 @@ GenomeInfoProcess(params.metadata_db)
 | GenerateFolderStructure 
 | (BuildTopLevelSequence & DumpXrefFile & DumpChromosomeFile)
 
-//BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)
+BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles )// & DumpEMBLFiles)
 //DumpGenomeFiles(BuildTopLevelSequence.out)
  
 }

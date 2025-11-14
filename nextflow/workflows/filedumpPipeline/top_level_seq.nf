@@ -19,7 +19,6 @@ process BuildTopLevelSequence {
   label 'mem20GB'
   errorStrategy 'finish'
   tag "${db_name}-top_level_sequence_build"
-  publishDir "${params.output_path}/${species}", mode: 'copy', overWrite: true
   maxForks 1
   
   input: 
@@ -27,8 +26,10 @@ process BuildTopLevelSequence {
   val output_folder
 
   output:
-  stdout
+  val "${dataset}"
   val "${output_folder}"
+  path "${params.top_level_dir}"
+
 
   script:
   jsonS = new JsonSlurper()
@@ -39,7 +40,6 @@ process BuildTopLevelSequence {
   """
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/top_level_sequence_build.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --output_dir ${params.top_level_dir} --species ${species}\
-    && ${params.nf_py_script_path}file_dump/generate_output_path.py --dataset ${dataset}
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --output_dir ${params.top_level_dir} --species ${species}
   """
 }

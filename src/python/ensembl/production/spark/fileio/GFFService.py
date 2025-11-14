@@ -386,14 +386,14 @@ class GFFService():
         if isinstance(gff_frame["translation"], list) == False: #If it is not df
             self.write_translations(gff_frame["translation"])
 
-    def dump_all_features (self, db, user, password) -> None:
+    def dump_all_features (self, db, user, password, species) -> None:
         
         #Read all features from db
         self._regions = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("query","select s.*, group_concat(syn.synonym separator ', ')  as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id group by s.seq_region_id, s.name, s.length, s.coord_system_id")\
+                .option("query","select s.*, group_concat(syn.synonym separator ', ')  as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id left join coord_system cs on cs.coord_system_id = s.coord_system_id where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\") group by s.seq_region_id, s.name, s.length, s.coord_system_id ")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -402,7 +402,7 @@ class GFFService():
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("dbtable","transcript")\
+                .option("query", "select t.* from transcript t left join seq_region sr on t.seq_region_id = sr.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -411,9 +411,8 @@ class GFFService():
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("query","select g.*, x.display_label as gene_name from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
-                     and ox.ensembl_object_type=\"Gene\" \
-                    left join xref x on x.xref_id = ox.xref_id")\
+                .option("query","select g.*, x.display_label as gene_name from gene g left join seq_region sr on sr.seq_region_id = g.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id left join object_xref ox on g.gene_id = ox.ensembl_id\
+                     left join xref x on x.xref_id = ox.xref_id where ox.ensembl_object_type=\"Gene\" and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -579,7 +578,7 @@ class GFFService():
 
         exons = self._exons.join(self._regions.select("seq_region_id",
                                                     "name"), on =
-                               ["seq_region_id"], how="left")
+                               ["seq_region_id"], how="right")
 
         exons = exons.join(self._exon_transcript, on = ["exon_id"],
                           how = "inner")
@@ -605,7 +604,7 @@ class GFFService():
         
         return [genes, transcripts, exons, cds, assembly_df, regions]
 
-    def write_gff(self, file_path, features=None, db="", user="", password="") -> None:
+    def write_gff(self, file_path, features=None, db="", user="", password="", species = "") -> None:
         
         # Join attribs
         @udf(returnType=StringType())
@@ -706,7 +705,7 @@ class GFFService():
             return result
         
         if (features is None):
-            features = self.dump_all_features(db, user, password)
+            features = self.dump_all_features(db, user, password, species)
         
         [genes, transcripts, exons, cds, assembly_df, regions] = features       
 
@@ -1054,10 +1053,10 @@ class GFFService():
         start_codons = start_codons.drop("type")        
         return start_codons
     
-    def write_gtf(self, file_path, features=None, sequence=None, db="", user="", password="", ) -> None:
+    def write_gtf(self, file_path, features=None, sequence=None, db="", user="", password="", species = "") -> None:
         
         if (features is None):
-            features = self.dump_all_features(db, user, password)
+            features = self.dump_all_features(db, user, password, species)
         
         if (sequence is None):
             return 1

@@ -31,6 +31,7 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--sequence', action="store", dest='sequence', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -39,8 +40,8 @@ username = args.username
 url = args.db
 base_dir = args.base_dir
 sequence = args.sequence
+species = args.species
 
-import os
 confi=SparkConf()
 confi.set("spark.executor.memory", "10g")
 confi.set("spark.driver.memory", "15g")
@@ -59,7 +60,7 @@ spark_session.sparkContext.setLogLevel("ERROR")
 #GTF and GFF dumps should be placed together as they are sharing the same features dump
 #GFF features dump is in separate GFF service - becouse it is feature creation, automatic annotation - not just dump
 gff_service = GFFService(spark_session)
-features = gff_service.dump_all_features(url, username, pwd)
+features = gff_service.dump_all_features(url, username, pwd, species)
 
 gff_service.write_gff("./test_gff.gff", features)
 gff_service.write_gtf("./test_gtf.gtf", features, sequence + "/sequence")

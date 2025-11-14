@@ -12,33 +12,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import groovy.json.JsonSlurper
 
 process DumpGFF3_GTFFiles {
 
   debug 'true'
   label 'mem20GB'
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
-  tag "${db_name}-dump_gff_gtf"
+  tag "${db_name}-dump_gff-gtf"
+  publishDir "${params.ftp_path}/${output_folder}/genset", mode: 'copy'
   maxForks 1
 
-  input:
-  each db_name
-  path output_dir
-  path top_level_dir
-  path feature_dir
+  input: 
+  val dataset
+  val output_folder
+  path feature_seq
 
   output:
-  stdout
   path "test_gff.gff"
   path "test_gtf.gtf"
+
+  script:
+  jsonS = new JsonSlurper()
+  confJson = jsonS.parseText(dataset)
+  species = confJson.species
+  db_name = confJson.dataset_source
 
   //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
   //Dont change it until it complies with fasta dump
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
-  export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/dump_gff3_gtf.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --sequence ${feature_dir} --password ${params.password}  --db ${params.server}/${db_name}  && echo -n ${db_name}
+   --username ${params.user} --sequence ${feature_seq} --password ${params.password}  --db ${params.server}/${db_name} --species ${species} 
   """
 }
