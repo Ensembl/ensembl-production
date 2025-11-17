@@ -38,6 +38,7 @@ parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--sequence', action="store", dest='sequence', default="")
 parser.add_argument('--top_level_seq', action="store", dest='top_sequence', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -47,6 +48,7 @@ url = args.db
 base_dir = args.base_dir
 seq = args.sequence + "/sequence"
 top_level_sequence = args.top_sequence
+species = args.species
 
 import os
 confi=SparkConf()
@@ -194,15 +196,17 @@ genes = spark_session.read\
                 .option("url", url)\
                 .option("query","select g.*, x.display_label as locus_tag, x.description as note from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
                      and ox.ensembl_object_type=\"Gene\" \
-                    left join xref x on x.xref_id = ox.xref_id")\
+                    left join xref x on x.xref_id = ox.xref_id left join seq_region sr on sr.seq_region_id = g.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id\
+                         where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
+
 transcripts = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select * from transcript")\
+                .option("query","select t.* from transcript t left join seq_region sr on t.seq_region_id = sr.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
@@ -213,7 +217,7 @@ region = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select seq_region.seq_region_id, seq_region.name as sr_name, seq_region.length, coord_system.* from seq_region join coord_system on seq_region.coord_system_id = coord_system.coord_system_id")\
+                .option("query","select seq_region.seq_region_id, seq_region.name as sr_name, seq_region.length, coord_system.* from seq_region join coord_system on seq_region.coord_system_id = coord_system.coord_system_id  where coord_system.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()

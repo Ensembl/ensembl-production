@@ -12,24 +12,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import groovy.json.JsonSlurper
 
 process DumpEMBLFiles {
 
   debug 'true'
   label 'mem20GB'
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
   tag "${db_name}-dump_embl"
+  publishDir "${params.ftp_path}/${output_folder}/genset", mode: 'copy'
   maxForks 1
-  
-  input:
-  each db_name
-  path output_dir
-  path top_level_dir
-  path feature_dir
 
+  input: 
+  val dataset
+  val output_folder
+  path feature_seq
+  
   output:
   path "test.embl"
+
+  script:
+  jsonS = new JsonSlurper()
+  confJson = jsonS.parseText(dataset)
+  species = confJson.species
+  db_name = confJson.dataset_source
 
   //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
   //Dont change it until it complies with fasta dump
@@ -37,6 +43,6 @@ process DumpEMBLFiles {
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/dump_embl.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --sequence ${feature_dir} --top_level_seq ${top_level_dir} --password ${params.password}  --db ${params.server}/${db_name}
+   --username ${params.user} --sequence ${feature_seq} --top_level_seq ${params.output}/${species}/${params.top_level_dir} --password ${params.password}  --db ${params.server}/${db_name} --species ${species}
   """
 }

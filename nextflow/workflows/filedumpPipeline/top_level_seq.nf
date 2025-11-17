@@ -19,6 +19,7 @@ process BuildTopLevelSequence {
   label 'mem20GB'
   errorStrategy 'finish'
   tag "${db_name}-top_level_sequence_build"
+  publishDir "${params.output}/${species}", mode: 'copy'
   maxForks 1
   
   input: 

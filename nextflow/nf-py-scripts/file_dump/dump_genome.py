@@ -37,6 +37,7 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--sequence', action="store", dest='sequence', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -45,7 +46,7 @@ username = args.username
 url = args.db
 base_dir = args.base_dir
 sequence = args.sequence
-
+species = args.species
 
 confi=SparkConf()
 confi.set("spark.executor.memory", "10g")
@@ -71,7 +72,7 @@ regions = spark_session.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", url)\
-            .option("dbtable", "(select sr.name as sr_name, sr.seq_region_id, sr.length, cs.* from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1)tmp")\
+            .option("dbtable", "(select sr.name as sr_name, sr.seq_region_id, sr.length, cs.* from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1 and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\"))tmp")\
             .option("user", username)\
             .option("password", pwd)\
             .load().dropDuplicates()
@@ -130,37 +131,18 @@ def apply_repeats_hard(sequence, repeats):
         offset = seq_region_end
     return result
 
-
 dna = dna.join(regions, on = ["seq_region_id"], how = "left_outer")
 dna_unmasked = dna.withColumn("info", concat(\
     lit(">") , "sr_name", lit(" unmasked:"), lit(assembly_level + " "), "name", lit(":"),\
         "version", lit(":"), "sr_name", lit(":1:"), "length", lit(":"), "rank"))\
         .withColumn("sequence", split_seq("sequence"))\
         .orderBy("seq_region_id")\
-        .select("info", "sequence")
-
-dna_unmasked.repartition(1)\
-    .write\
-    .mode('overwrite')\
-    .option("header", False)\
-    .option("escapeQuotes", False)\
-    .option("quote", "$")\
-    .option("quoteAll", False)\
-    .option("delimiter", "\n")\
-    .csv("./fasta_unmasked")
-file = glob.glob( "./fasta_unmasked"  + "/part-0000*")[0]
-
-f_cvs = open(file)
+        .select("info", "sequence", "seq_region_id")
+count = regions.count()
 f = open("unmasked.fa", "w")
-file_line = f_cvs.readline()
-while file_line:
-    if(file_line[0:1] == "$"):
-        file_line = file_line[1:]
-    if(file_line[-2:-1] == "$"):
-        file_line = file_line[:-2] + "\n"
-    f.write(file_line)
-    file_line = f_cvs.readline()
-f_cvs.close()
+for region in regions.collect():
+    file_line = dna_unmasked.filter("seq_region_id=" + str(region.seq_region_id)).collect()[0]
+    f.write(file_line.info + "\n" + file_line.sequence)
 f.close()
 
 repeats = spark_session.read\
@@ -186,33 +168,13 @@ dna_softmasked = dna.withColumn("info", concat(\
         .orderBy("seq_region_id")\
         .select("seq_region_id", "info", "sequence")\
         .join(repeats.select("seq_region_id", "ends"), on = ["seq_region_id"])
-dna_softmasked = file_service.write_df_to_orc(dna_softmasked,
-                                            "dna_softmasked", "dna_softmasked")
 
-dna_softmasked = dna_softmasked.withColumn("sequence", apply_repeats("sequence", "ends")).select("info", "sequence")
+dna_softmasked = dna_softmasked.withColumn("sequence", apply_repeats("sequence", "ends")).select("info", "sequence", "seq_region_id")
 
-dna_softmasked.repartition(1)\
-    .write\
-    .mode('overwrite')\
-    .option("header", False)\
-    .option("escapeQuotes", False)\
-    .option("quote", "$")\
-    .option("quoteAll", False)\
-    .option("delimiter", "\n")\
-    .csv("./fasta_softmasked")
-file = glob.glob( "./fasta_softmasked"  + "/part-0000*")[0]
-
-f_cvs = open(file)
 f = open("softmasked.fa", "w")
-file_line = f_cvs.readline()
-while file_line:
-    if(file_line[0:1] == "$"):
-        file_line = file_line[1:]
-    if(file_line[-2:-1] == "$"):
-        file_line = file_line[:-2] + "\n"
-    f.write(file_line)
-    file_line = f_cvs.readline()
-f_cvs.close()
+for region in regions.collect():
+    file_line = dna_softmasked.filter("seq_region_id=" + str(region.seq_region_id)).collect()[0]
+    f.write(file_line.info + "\n" + file_line.sequence)
 f.close()
 
 dna_hardmasked = dna.withColumn("info", concat(\
@@ -221,31 +183,11 @@ dna_hardmasked = dna.withColumn("info", concat(\
         .orderBy("seq_region_id")\
         .select("seq_region_id", "info", "sequence")\
         .join(repeats.select("seq_region_id", "ends"), on = ["seq_region_id"])
-dna_hardmasked = file_service.write_df_to_orc(dna_hardmasked,
-                                            "dna_hardmasked", "dna_hardmasked")
 
-dna_hardmasked = dna_hardmasked.withColumn("sequence", apply_repeats_hard("sequence", "ends")).select("info", "sequence")
+dna_hardmasked = dna_hardmasked.withColumn("sequence", apply_repeats_hard("sequence", "ends")).select("info", "sequence", "seq_region_id")
 
-dna_hardmasked.repartition(1)\
-    .write\
-    .mode('overwrite')\
-    .option("header", False)\
-    .option("escapeQuotes", False)\
-    .option("quote", "$")\
-    .option("quoteAll", False)\
-    .option("delimiter", "\n")\
-    .csv("./fasta_hardmasked")
-file = glob.glob( "./fasta_hardmasked"  + "/part-0000*")[0]
-
-f_cvs = open(file)
 f = open("hardmasked.fa", "w")
-file_line = f_cvs.readline()
-while file_line:
-    if(file_line[0:1] == "$"):
-        file_line = file_line[1:]
-    if(file_line[-2:-1] == "$"):
-        file_line = file_line[:-2] + "\n"
-    f.write(file_line)
-    file_line = f_cvs.readline()
-f_cvs.close()
+for region in regions.collect():
+    file_line = dna_softmasked.filter("seq_region_id=" + str(region.seq_region_id)).collect()[0]
+    f.write(file_line.info + "\n" + file_line.sequence)
 f.close()

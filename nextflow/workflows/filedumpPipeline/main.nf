@@ -81,8 +81,8 @@ GenomeInfoProcess(params.metadata_db)
 | GenerateFolderStructure 
 | (BuildTopLevelSequence & DumpXrefFile & DumpChromosomeFile)
 
-BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles )// & DumpEMBLFiles)
-//DumpGenomeFiles(BuildTopLevelSequence.out)
+BuildFeatureSequence(BuildTopLevelSequence.out) | (DumpFastaFiles & DumpGFF3_GTFFiles)// & DumpEMBLFiles)
+DumpGenomeFiles(BuildTopLevelSequence.out)//, DumpEMBLFiles.out)
  
 }
 
