@@ -14,22 +14,21 @@
 // limitations under the License.
 import groovy.json.JsonSlurper
 
-process DumpEMBLFiles {
+process DumpChromosomeFile {
 
-  debug 'true'
-  label 'mem20GB'
+  debug 'ture'
+  label 'mem2GB'
+  tag "${db_name}-dump_xref"
   errorStrategy 'finish'
-  tag "${db_name}-dump_embl"
-  publishDir "${params.ftp_path}/${output_folder}/genset", mode: 'copy'
+  publishDir "${params.ftp_path}/${output_folder}/genset", mode: 'copy', overWrite: true
   maxForks 1
-
+  
   input: 
   val dataset
   val output_folder
-  path feature_seq
-  
+
   output:
-  path "test.embl"
+  path "chromosomes.tsv", optional: true
 
   script:
   jsonS = new JsonSlurper()
@@ -37,12 +36,8 @@ process DumpEMBLFiles {
   species = confJson.species
   db_name = confJson.dataset_source
 
-  //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
-  //Dont change it until it complies with fasta dump
   """
-  export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
-  export SPARK_LOCAL_IP="127.0.0.1"
-  ${params.nf_py_script_path}file_dump/dump_embl.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --sequence ${feature_seq} --top_level_seq ${params.output}/${species}/${params.top_level_dir} --password ${params.password}  --db ${params.server}/${db_name} --species ${species}
+  ${params.nf_py_script_path}file_dump/dump_chromosome.py --base_dir=${BASE_DIR}\
+   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --species ${species}
   """
 }

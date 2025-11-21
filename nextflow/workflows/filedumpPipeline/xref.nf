@@ -12,29 +12,32 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import groovy.json.JsonSlurper
 
 process DumpXrefFile {
 
   debug 'ture'
-  label 'mem20GB'
-  tag "${db_name[0]}-dump_xref"
+  label 'mem2GB'
+  tag "${db_name}-dump_xref"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name[1]}", mode: 'copy'
-
-  input:
-  each db_name
-
+  publishDir "${params.ftp_path}/${output_folder}/genset", mode: 'copy', overWrite: true
+  maxForks 1
+  
+  input: 
+  val dataset
+  val output_folder
   output:
-  stdout
   path "xref.tsv"
 
+  script:
+  jsonS = new JsonSlurper()
+  confJson = jsonS.parseText(dataset)
+  species = confJson.species
+  db_name = confJson.dataset_source
+
   """
-  export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
-  export SPARK_LOCAL_IP="127.0.0.1"
-
   ${params.nf_py_script_path}file_dump/dump_xref.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name[0]} && echo -n ${db_name}
-
+   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --species ${species}
   """
 
 }

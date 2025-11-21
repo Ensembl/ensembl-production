@@ -12,36 +12,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import groovy.json.JsonSlurper
 
-process BuildFeatureSequence {
+process DbFactory {
 
   debug 'true'
   label 'mem20GB'
   errorStrategy 'finish'
-  tag "${db_name}-feature_sequence_build"
+  tag "${db_name}-top_level_sequence_build"
   maxForks 1
 
   input: 
-  val dataset
-  val output_folder
-  path top_level_dir
+  val(db_name)
 
   output:
-  val "${dataset}"
-  val "${output_folder}"
-  path "${params.feature_seq_dir}"
-
-  script:
-  jsonS = new JsonSlurper()
-  confJson = jsonS.parseText(dataset)
-  species = confJson.species
-  db_name = confJson.dataset_source
+  db_name
+  species_id
+  output_dir
 
   """
-  export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
-  export SPARK_LOCAL_IP="127.0.0.1"
-  ${params.nf_py_script_path}file_dump/feature_sequence_build.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --top_level_seq ${top_level_dir} --species ${species} --output_dir ${params.feature_seq_dir}
+  mysql -e show schemas &&
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name}
   """
 }

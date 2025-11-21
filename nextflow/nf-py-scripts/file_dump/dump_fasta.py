@@ -33,6 +33,7 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--sequence', action="store", dest='sequence', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -41,12 +42,13 @@ username = args.username
 url = args.db
 base_dir = args.base_dir
 sequence = args.sequence
+species = args.species
 
 import os
 confi=SparkConf()
 confi.set("spark.executor.memory", "10g")
 confi.set("spark.driver.memory", "15g")
-confi.set("spark.cores.max", "1")
+confi.set("spark.cores.max", "3")
 confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
 confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")

@@ -26,6 +26,7 @@ parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--output_dir', action="store", dest='output_dir', default="")
 parser.add_argument('--top_level_seq', action="store", dest='top_level_seq', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -35,22 +36,20 @@ url = args.db
 base_dir = args.base_dir
 output_dir = args.output_dir
 top_level_seq = args.top_level_seq
+species = args.species
 
 confi=SparkConf()
 confi.set("spark.executor.memory", "10g")
-confi.set("spark.driver.memory", "16g")
+confi.set("spark.driver.memory", "10g")
 confi.set("spark.cores.max", "4")
 confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
-confi.set("spark.driver.maxResultSize", "8G")
+confi.set("spark.driver.maxResultSize", "3G")
 confi.set("spark.ui.showConsoleProgress", "true")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
 spark_session.sparkContext.setLogLevel("ERROR")
 
 transcript_service = TranscriptSparkService(spark_session)
-fasta_df = transcript_service.translated_seq(url, username, pwd, None, True, top_level_seq)
+fasta_df = transcript_service.translated_seq(url, username, pwd, species, None, True, top_level_seq)
 fasta_df.write.orc(output_dir + "/sequence", mode="overwrite")
 cdna_df = spark_session.read.orc("sequence_cdna").write.orc(output_dir + "/sequence_cdna", mode="overwrite")
-
-    
-    

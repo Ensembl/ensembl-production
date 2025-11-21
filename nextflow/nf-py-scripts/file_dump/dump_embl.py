@@ -37,6 +37,8 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--sequence', action="store", dest='sequence', default="")
+parser.add_argument('--top_level_seq', action="store", dest='top_sequence', default="")
+parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -45,6 +47,8 @@ username = args.username
 url = args.db
 base_dir = args.base_dir
 seq = args.sequence + "/sequence"
+top_level_sequence = args.top_sequence
+species = args.species
 
 import os
 confi=SparkConf()
@@ -63,6 +67,8 @@ transcript_service = TranscriptSparkService(spark_session)
 exon_service = ExonSparkService(spark_session)
 
 def lines_break(full, prefix):
+    if (full is None):
+        full = "ERROR"
     result = ""
     full = "\n"+ prefix + full
     full = full.split(" ")
@@ -86,6 +92,8 @@ def split_intro(full, prefix):
 @udf(returnType=StringType())
 def split_coordinates(coordinates):
     full = coordinates
+    if (full is None):
+        full = "ERROR"
     prefix = "FT                   "
     result = ""
     full = "\nFT   " + full
@@ -113,9 +121,12 @@ def gene_desc(locus_tag, desc):
         result = result + lines_break(desc, "FT                   ")
     return result
 
-@udf(returnType=BooleanType())
-def is_single(coordinates):
-    return coordinates.find(",") < 0
+@udf(returnType=StringType())
+def join_coord(coordinates):
+    if (coordinates.find(",") < 0):
+        return coordinates
+    else:
+        return "join(" + coordinates + ")"
 
 @udf(returnType=StringType())
 def xref_note(xref, prefix=None): 
@@ -132,7 +143,6 @@ def xref_note(xref, prefix=None):
     return result
 
 #Split coordinates to lines
-#TODO Ref
 @udf(returnType=StringType())
 def split_sequence(seq):
     seq = seq.replace("!", "")
@@ -145,16 +155,19 @@ def split_sequence(seq):
 @udf(returnType=StringType())
 def split_region_sequence(seq):
     #This split must be kept exactly like this, not in for loop or whatever - only this function, that is python wrapper of c++
-    # give adequate performance. Other options kill perfomants immediatly. 
-    result = ' '.join(seq[i:i+10] for i in range(0, len(seq), 10))
+    # give adequate performance. Other options kill perfomants immediatly.
+    block_length = 10
+    line_length = 66
+    result = ' '.join(seq[i:i+block_length] for i in range(0, len(seq), block_length))
     length = len(result)
     len_seq = len(seq)
-    lines = (length//66)*66
-    remain_length = len(result)%66
+    lines = (length//line_length)*line_length
+    remain_length = length%line_length
     remain = result[-remain_length:]
 
-    result = "    " + ('\n    ').join((result[i:i+66]  + "   " + str(((i+66)//11)*10)) for i in range(0, lines, 66))\
-        +"\n    " + remain + (' '*(69-remain_length)) + str(len_seq) + "\n//"
+    result = "    " + ('\n    ').join((result[i:i+line_length]  + "   " + str(((i+line_length)//11)*block_length))\
+                                       for i in range(0, lines, line_length))\
+                                     +"\n    " + remain + (' '*(69-remain_length)) + str(len_seq) + "\n//"
     return result
 
 @udf(returnType=StringType())
@@ -175,14 +188,7 @@ def seq_stats(seq):
     result = "\nSQ   Sequence" + total + a + c + g + t + other
     return  result
 
-dna = spark_session.read\
-                .format("jdbc")\
-                .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", url)\
-                .option("query","select d.sequence, sr.* from dna d join seq_region sr on d.seq_region_id = sr.seq_region_id")\
-                .option("user", username)\
-                .option("password", pwd)\
-                .load()
+dna = spark_session.read.orc(top_level_sequence)
 
 genes = spark_session.read\
                 .format("jdbc")\
@@ -190,28 +196,32 @@ genes = spark_session.read\
                 .option("url", url)\
                 .option("query","select g.*, x.display_label as locus_tag, x.description as note from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
                      and ox.ensembl_object_type=\"Gene\" \
-                    left join xref x on x.xref_id = ox.xref_id")\
+                    left join xref x on x.xref_id = ox.xref_id left join seq_region sr on sr.seq_region_id = g.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id\
+                         where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
+
 transcripts = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select * from transcript")\
+                .option("query","select t.* from transcript t left join seq_region sr on t.seq_region_id = sr.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
 
 exons = exon_service.load_exons_fs(url, username, pwd, "exons")
+
 region = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select seq_region.seq_region_id, seq_region.name as sr_name, seq_region.length, coord_system.* from seq_region join coord_system on seq_region.coord_system_id = coord_system.coord_system_id")\
+                .option("query","select seq_region.seq_region_id, seq_region.name as sr_name, seq_region.length, coord_system.* from seq_region join coord_system on seq_region.coord_system_id = coord_system.coord_system_id  where coord_system.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
+dna = dna.join(region, on = ["seq_region_id"], how = "left")
 taxonomy_id = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -293,15 +303,9 @@ mRNA =\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
         .alias("coordinates"))\
         .drop("created_date", "modified_date", "stable_id")
-mRNA = mRNA.withColumn("single", is_single("coordinates"))
-
-mRNA_single = mRNA.filter("single=True")
 
 mRNA =\
-    mRNA.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
-
-mRNA = mRNA.unionByName(mRNA_single)
-
+    mRNA.withColumn("coordinates", join_coord("coordinates"))
 
 mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version", "seq_region_id"), on=["gene_id"])
 
@@ -338,13 +342,10 @@ cds =\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
         .alias("coordinates"))\
         .drop("created_date", "modified_date", "stable_id")
-cds = cds.withColumn("single", is_single("coordinates"))
-
-cds_single = cds.filter("single=True")
 
 cds =\
-    cds.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
-cds = cds.unionByName(cds_single)
+    cds.withColumn("coordinates", join_coord("coordinates"))
+
 cds = cds.withColumn("coordinates", concat(lit("CDS             "), "coordinates"))
 cds = cds.withColumn("coordinates", split_coordinates("coordinates"))
 cds = cds.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])

@@ -18,11 +18,9 @@ url =\
 username = "ensro"
 pwd = ""
 
-import sys
-from pyspark import SparkConf
-from pyspark.sql import SparkSession
-from ensembl.production.spark.fileio.GFFService import GFFService
+import sqlalchemy
 import argparse
+from sqlalchemy import text
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Fasta files dump')
@@ -42,25 +40,38 @@ base_dir = args.base_dir
 sequence = args.sequence
 species = args.species
 
-confi=SparkConf()
-confi.set("spark.executor.memory", "10g")
-confi.set("spark.driver.memory", "15g")
-confi.set("spark.cores.max", "3")
-confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
-confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
-confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
-confi.set("spark.driver.maxResultSize", "3G")
-confi.set("spark.ui.showConsoleProgress", "false")
-spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
-spark_session.sparkContext.setLogLevel("ERROR")
-#need to create working dirs $output_dir, $timestamped_dir, $web_dir, $ftp_dir for each assembly (species) and data category
-# we assume the following data categories for core fd:  
-# 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
+import os
 
-#GTF and GFF dumps should be placed together as they are sharing the same features dump
-#GFF features dump is in separate GFF service - becouse it is feature creation, automatic annotation - not just dump
-gff_service = GFFService(spark_session)
-features = gff_service.dump_all_features(url, username, pwd, species)
+try:
+    os.remove("chromosome.tsv")
+except OSError:
+    pass
 
-gff_service.write_gff("./test_gff.gff", features)
-gff_service.write_gtf("./test_gtf.gtf", features, sequence + "/sequence")
+f_unmasked = open("chromosome.tsv", "a")
+
+result = None
+if (len(pwd) > 0):
+    url = "mysql://" + username + ":" + pwd + "@" + url.split("//")[1]
+else: 
+    url = "mysql://" + username + "@" + url.split("//")[1]
+
+engine = sqlalchemy.create_engine(url)
+
+with engine.connect() as conn:
+    query = text('select meta_value from meta where meta_key="assembly.level"')
+    assembly_level = conn.execute(query)
+    assembly_level = assembly_level.all()
+    if(len(assembly_level) < 1):
+        assembly_level = 'chromosome'
+    else:
+        for row in assembly_level:
+            print(str(row.meta_value))
+            assembly_level = str(row.meta_value)
+    if (assembly_level == "chromosome"):
+      query = text("select sr.* from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id right join seq_region_attrib sa on sa.seq_region_id = sr.seq_region_id where cs.rank=1 and sa.attrib_type_id=367 order by sr.seq_region_id  and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")
+      regions = conn.execute(query)
+      for region in regions:
+        seq_id = str(region.name)
+        seq_length = str(region.length)
+        f_unmasked.write(seq_id + "\t" + seq_length + "\n")
+f_unmasked.close()

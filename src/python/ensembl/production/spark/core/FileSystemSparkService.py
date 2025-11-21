@@ -58,7 +58,7 @@ class FileSystemSparkService:
         df.write\
             .mode("overwrite")\
             .orc(folder_path)
-        return self._spark.read.orc(folder_path).repartition(4)
+        return self._spark.read.orc(folder_path).repartition(20)
 
 
     """

@@ -13,9 +13,7 @@
    limitations under the License.
 """
 
-from pyspark import SparkConf
-from pyspark.sql import SparkSession
-from ensembl.production.spark.core.SequenceService import SequenceService
+from ensembl.production.spark.fileio.FtpService import get_dataset_path
 import argparse
 
 # Define the parser
@@ -23,8 +21,6 @@ parser = argparse.ArgumentParser(description='Fasta files dump')
 parser.add_argument('--password', action="store", dest='password', default="")
 parser.add_argument('--username', action="store", dest='username', default="ensro")
 parser.add_argument('--db', action="store", dest='db', default="")
-parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
-parser.add_argument('--output_dir', action="store", dest='output_dir', default="")
 parser.add_argument('--species', action="store", dest='species', default="")
 
 args = parser.parse_args()
@@ -33,25 +29,5 @@ pwd = args.password
 username = args.username
 url = args.db
 species = args.species
-base_dir = args.base_dir
-output_dir = args.output_dir
+print(get_dataset_path(url, username, pwd, species), end="")
 
-import os
-confi=SparkConf()
-confi.set("spark.executor.memory", "7g")
-confi.set("spark.driver.memory", "10g")
-confi.set("spark.cores.max", "1")
-
-confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
-confi.set("spark.driver.maxResultSize", "2G")
-confi.set("spark.ui.showConsoleProgress", "false")
-spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
-spark_session.sparkContext.setLogLevel("ERROR")
-
-sequence_service = SequenceService(spark_session)
-fasta_df = sequence_service.build_top_level_seq(url,  username, pwd, species, output_dir)
-
-
-
-    
-    

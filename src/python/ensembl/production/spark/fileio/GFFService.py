@@ -18,9 +18,8 @@ from ensembl.production.spark.core.TranscriptSparkService import TranscriptSpark
 from pathlib import Path
 import glob
 import warnings
-from pyspark.sql.functions import udf, substring, concat_ws, expr, collect_list, sort_array
+from pyspark.sql.functions import udf, substring, concat_ws, expr
 from pyspark.sql.window import Window
-from typing import Optional
 import os
 from pyspark.sql.functions import lit
 from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
@@ -387,14 +386,14 @@ class GFFService():
         if isinstance(gff_frame["translation"], list) == False: #If it is not df
             self.write_translations(gff_frame["translation"])
 
-    def dump_all_features (self, db, user, password) -> None:
+    def dump_all_features (self, db, user, password, species) -> None:
         
         #Read all features from db
         self._regions = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("query","select s.*, group_concat(syn.synonym separator ', ')  as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id group by s.seq_region_id, s.name, s.length, s.coord_system_id")\
+                .option("query","select s.*, group_concat(syn.synonym separator ', ')  as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id left join coord_system cs on cs.coord_system_id = s.coord_system_id where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\") group by s.seq_region_id, s.name, s.length, s.coord_system_id ")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -403,7 +402,7 @@ class GFFService():
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("dbtable","transcript")\
+                .option("query", "select t.* from transcript t left join seq_region sr on t.seq_region_id = sr.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -412,9 +411,8 @@ class GFFService():
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("query","select g.*, x.display_label as gene_name from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
-                     and ox.ensembl_object_type=\"Gene\" \
-                    left join xref x on x.xref_id = ox.xref_id")\
+                .option("query","select g.*, x.display_label as gene_name from gene g left join seq_region sr on sr.seq_region_id = g.seq_region_id left join coord_system cs on cs.coord_system_id = sr.coord_system_id left join object_xref ox on g.gene_id = ox.ensembl_id\
+                     left join xref x on x.xref_id = ox.xref_id where ox.ensembl_object_type=\"Gene\" and cs.species_id = (select species_id from meta where meta_value=\"" + species + "\" and meta_key=\"organism.production_name\")")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -580,7 +578,7 @@ class GFFService():
 
         exons = self._exons.join(self._regions.select("seq_region_id",
                                                     "name"), on =
-                               ["seq_region_id"], how="left")
+                               ["seq_region_id"], how="right")
 
         exons = exons.join(self._exon_transcript, on = ["exon_id"],
                           how = "inner")
@@ -606,7 +604,7 @@ class GFFService():
         
         return [genes, transcripts, exons, cds, assembly_df, regions]
 
-    def write_gff(self, file_path, features=None, db="", user="", password="") -> None:
+    def write_gff(self, file_path, features=None, db="", user="", password="", species = "") -> None:
         
         # Join attribs
         @udf(returnType=StringType())
@@ -707,14 +705,20 @@ class GFFService():
             return result
         
         if (features is None):
-            features = self.dump_all_features(db, user, password)
+            features = self.dump_all_features(db, user, password, species)
         
         [genes, transcripts, exons, cds, assembly_df, regions] = features       
-         
+
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
-        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
-        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
+        try:    
+            assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        except: 
+            assembly_acc = ""
+        try: 
+            genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
+        except:
+            genebuild_date = ""
         tmp_fp = assembly_name + "_gff"
                 
         # Strand
@@ -934,7 +938,7 @@ class GFFService():
         rank_prev_pos = rank_prev_pos.withColumn("seq_region_start", rank_prev_pos["seq_region_end"] - 1 + rank_prev_pos["length"])
         rank_prev_neg = rank_prev.filter("seq_region_strand < 0")
         rank_prev_neg = rank_prev_neg.withColumn("seq_region_end", rank_prev_neg["seq_region_start"] + 1 - rank_prev_neg["length"])
-        
+
         rank_prev = rank_prev_neg.union(rank_prev_pos).drop("tiny_rank", "transcript_stable_id_old")
         rank_prev = rank_prev.withColumn("length", rank_prev.seq_region_end - rank_prev.seq_region_start).select(\
         "transcript_stable_id",\
@@ -1044,16 +1048,15 @@ class GFFService():
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
         normal_cds_neg = normal_cds.filter("seq_region_strand < 0")
         normal_cds_neg = normal_cds_neg.withColumn("seq_region_start", normal_cds_neg["seq_region_end"] - 2)
-
         
         start_codons = normal_cds_neg.drop("start_exon_id").union(normal_cds_pos.drop("start_exon_id")).union(rank_prev).union(small_cds.drop("start_exon_id"))
         start_codons = start_codons.drop("type")        
         return start_codons
     
-    def write_gtf(self, file_path, features=None, sequence=None, db="", user="", password="", ) -> None:
+    def write_gtf(self, file_path, features=None, sequence=None, db="", user="", password="", species = "") -> None:
         
         if (features is None):
-            features = self.dump_all_features(db, user, password)
+            features = self.dump_all_features(db, user, password, species)
         
         if (sequence is None):
             return 1
@@ -1061,9 +1064,14 @@ class GFFService():
         [genes, transcripts, exons, cds, assembly_df, regions] = features
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
-        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
-        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
-                        
+        try:    
+            assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        except: 
+            assembly_acc = ""
+        try: 
+            genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
+        except:
+            genebuild_date = ""                        
         tmp_fp = assembly_name
         # Join attribs
         @udf(returnType=StringType())
@@ -1482,15 +1490,14 @@ class GFFService():
         
         
         cds_neg = cds_neg.drop("seq_region_start").withColumn("seq_region_start", cds_neg.c_seq_region_end + 1)
+        
+        
         cds_neg = cds_neg.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
-      
-
         cds_pos = cds_pos.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
-        
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")      
         cds_only = cds_only.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
@@ -1513,8 +1520,6 @@ class GFFService():
         cds_croped = cds_croped.select("name", "source", "feature_type",
                 "seq_region_start", "seq_region_end",
                 "score", "seq_region_strand", "phase", "attributes", "transcript_stable_id", "rank", "exon_id")
-
-
 
 
         cds = cds.union(cds_croped)
