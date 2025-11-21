@@ -28,7 +28,7 @@ import logging
 import os
 import csv
 from sqlalchemy import func, select
-from ensembl.database import DBConnection
+from ensembl.utils.database import DBConnection
 from ensembl.production.metadata.api.models.dataset import DatasetType, Dataset, DatasetSource, DatasetStatus
 from ensembl.production.metadata.api.models.genome import Genome, GenomeDataset
 from ensembl.production.metadata.api.models.organism import Organism, OrganismGroup, OrganismGroupMember

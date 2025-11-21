@@ -9,7 +9,7 @@ import os
 import requests
 
 from sqlalchemy import func, select
-from ensembl.database import DBConnection
+from ensembl.utils.database import DBConnection
 from ensembl.production.metadata.api.models.dataset import (
     DatasetType,
     Dataset,
