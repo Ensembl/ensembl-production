@@ -104,7 +104,7 @@ sub run {
         # A0A2I1PIX0,1,200,AF-A0A2I1PIX0-F1,4
         # Currently, all entries in this file have a unique uniprot accession and
         # have a hit starting at 1
-        unless ($line =~ /^\w+,\d+,\d+,[\w_-]+,\d+$/) {
+        unless ($line =~ /^[\w_-]+,\d+,\d+,[\w_-]+,\d+$/) {
             die "Data error. Line is not what we expect: '$line'";
         }
         my @x = split(",", $line, 2);
