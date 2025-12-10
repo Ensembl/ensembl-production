@@ -349,13 +349,10 @@ class OfficialNaming(BasicMapper):
 
             # Fail xrefs with worse % identity if we can (query or target identity whichever is greater)
             case_stmt = case(
-                [
-                    (
-                        IdentityXrefUORM.query_identity
-                        >= IdentityXrefUORM.target_identity,
-                        IdentityXrefUORM.query_identity,
-                    )
-                ],
+                (
+                    IdentityXrefUORM.query_identity >= IdentityXrefUORM.target_identity,
+                    IdentityXrefUORM.query_identity,
+                ),
                 else_=IdentityXrefUORM.target_identity,
             ).label("best_identity")
             query = (
