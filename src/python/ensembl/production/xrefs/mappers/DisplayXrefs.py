@@ -143,18 +143,14 @@ class DisplayXrefs(BasicMapper):
             GTTTranscript = aliased(GeneTranscriptTranslationORM)
             GTTTranslation = aliased(GeneTranscriptTranslationORM)
             gene_case_stmt = case(
-                [
-                    (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.gene_id),
-                    (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.gene_id),
-                    (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.gene_id),
-                ],
+                (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.gene_id),
+                (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.gene_id),
+                (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.gene_id),
             ).label("d_gene_id")
             transcript_case_stmt = case(
-                [
-                    (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.transcript_id),
-                    (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.transcript_id),
-                    (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.transcript_id),
-                ],
+                (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.transcript_id),
+                (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.transcript_id),
+                (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.transcript_id),
             ).label("d_transcript_id")
 
             # Get all relevant xrefs for this object type based on precedence sources
@@ -489,11 +485,9 @@ class DisplayXrefs(BasicMapper):
         GTTTranscript = aliased(GeneTranscriptTranslationORM)
         GTTTranslation = aliased(GeneTranscriptTranslationORM)
         gene_case_stmt = case(
-            [
-                (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.gene_id),
-                (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.gene_id),
-                (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.gene_id),
-            ],
+            (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.gene_id),
+            (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.gene_id),
+            (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.gene_id),
         ).label("d_gene_id")
 
         # Get all relevant xrefs for this object type based on precedence sources
