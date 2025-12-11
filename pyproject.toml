@@ -45,7 +45,7 @@ classifiers = [
 dependencies = [
     "requests >= 2.25.0, < 3",
     "pydantic >= 1.10.5",
-    "ensembl-py >= 2.1.0",
+    "ensembl-py >= 3.0.1",
     "ensembl-utils >= 0.8",
     "ensembl-metadata-api @ git+https://github.com/Ensembl/ensembl-metadata-api.git",
     "wget >= 3.2",
