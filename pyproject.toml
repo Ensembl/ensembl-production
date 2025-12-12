@@ -48,6 +48,7 @@ dependencies = [
     "ensembl-py >= 3.0.1",
     "ensembl-utils >= 0.8",
     "ensembl-metadata-api @ git+https://github.com/Ensembl/ensembl-metadata-api.git",
+    "ensembl_nf @ git+https://github.com/Ensembl/ensembl_nf.git",
     "wget >= 3.2",
     "unidecode >= 1.4.0",
     "biopython >= 1.85",
