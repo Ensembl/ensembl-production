@@ -121,14 +121,14 @@ sub pipeline_analyses {
         {
             -logic_name => 'fetch_info_generate_checksums',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::ChecksumGenerator',
-            -analysis_capacity => 20,
+            -analysis_capacity => 5,
             -rc_name           => '16GB_D'
         },
         {
             -logic_name        => 'run_datacheck',
             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -max_retry_count   => 1,
-            -analysis_capacity => 10,
+            -analysis_capacity => 5,
             -batch_size        => 10,
             -parameters        => {
                 datacheck_names => ['SequenceChecksum'],

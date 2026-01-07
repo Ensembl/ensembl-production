@@ -175,7 +175,7 @@ sub pipeline_analyses {
       -logic_name        => 'BackupTables',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
       -max_retry_count   => 1,
-      -analysis_capacity => 20,
+      -analysis_capacity => 5,
       -parameters        => {
                               table_list  => [
                                 'analysis',
@@ -194,7 +194,7 @@ sub pipeline_analyses {
       -logic_name        => 'AnalysisSetup',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
       -max_retry_count   => 0,
-      -analysis_capacity => 20,
+      -analysis_capacity => 5,
       -parameters        => {
                               db_backup_required => 1,
                               db_backup_file     => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
@@ -209,7 +209,7 @@ sub pipeline_analyses {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -max_retry_count   => 1,
-      -analysis_capacity => 20,
+      -analysis_capacity => 5,
       -parameters        => {},
       -flow_into         => {
                               '2' => ['RNACentralXref'],
@@ -221,7 +221,7 @@ sub pipeline_analyses {
       -logic_name        => 'RNACentralXref',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::RNAGeneXref::RNACentralXref',
       -max_retry_count   => 0,
-      -analysis_capacity => 50,
+      -analysis_capacity => 5,
       -parameters        => {
                               logic_name => $self->o('rnacentral_logic_name'),
                             },
@@ -233,7 +233,7 @@ sub pipeline_analyses {
       -logic_name        => 'RunDatachecks',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -max_retry_count   => 1,
-      -analysis_capacity => 10,
+      -analysis_capacity => 1,
       -parameters        => {
                               datacheck_names  => ['ForeignKeys'],
                               config_file      => $self->o('config_file'),
