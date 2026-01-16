@@ -22,6 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths;
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::FileDump::Base');
+use Bio::EnsEMBL::DBSQL::DBAdaptor;
 
 use File::Spec::Functions qw/catdir/;
 use Path::Tiny;
@@ -75,19 +76,34 @@ sub write_output {
 
 sub directories {
   my ($self, $data_category) = @_;
+  sub split_assembly {
 
+	my $assembly = shift();
+	my $subdir_len = 3;
+
+	my @substrs = split(/\_/,$assembly);
+	my @version = split(/\./,$substrs[1]);
+	my @sub_dirs = ();
+
+	for (my $begin = 0; $begin <= length($substrs[1]) - $subdir_len; $begin += $subdir_len ) {
+	my $sub_dir_str = substr($substrs[1], $begin, $subdir_len);
+	push (@sub_dirs, $sub_dir_str);
+ 	}
+
+ 	return $substrs[0], @sub_dirs, $version[1] ;
+  }
   my $dump_dir              = $self->param_required('dump_dir');
   my $species_dirname       = $self->param_required('species_dirname');
   my $web_dirname           = $self->param_required('web_dirname');
   my $species_name          = $self->param('species_name');
   my $assembly              = $self->param('assembly');
-  my @assembly_dir          = $self->split_assembly($assembly);
-
+  my @assembly_dir          = split_assembly($assembly);
+  my $homology_date_label   = $self->date_for_homology($assembly);
   my $subdirs;
   my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
   if ( grep( /^$data_category$/, @data_categories ) ) {
     foreach my $asm_dir (@assembly_dir){
-      $subdirs = catdir( $subdirs, $asm_dir);
+     $subdirs = catdir( $subdirs, $asm_dir);
     }
     $subdirs = catdir(
       $subdirs,
@@ -96,8 +112,8 @@ sub directories {
     );
   }
   #Genome should just have assembly files.
-  if ( $data_category =~ /genome/ ) {
-      $subdirs = catdir(
+   if ( $data_category =~ /genome/ ) {
+      $subdirs = catdir(\
       $species_dirname,
       $species_name,
       $assembly,
@@ -106,7 +122,10 @@ sub directories {
   }
   if ( $data_category =~ /geneset|variation|homology/ ) {
     # Variation, geneset, homology add an extra `YYYY_MM` subdir.
-    $subdirs = catdir ($subdirs, $self->param('geneset'))
+    $subdirs = catdir ($subdirs, $self->param('geneset'));
+     if ( $data_category =~ /homology/ ) {
+  	$subdirs = catdir ($subdirs, $homology_date_label);
+     }
   }
   my $output_dir = catdir(
     $dump_dir,
@@ -129,23 +148,40 @@ sub directories {
   return ($output_dir, $web_dir, $ftp_dir);
 }
 
-sub split_assembly {
-  
-  my $assembly = shift();
-  my $subdir_len = 3;
-  
-  my @substrs = split(/\_/,$assembly);
-  my @version = split(/\./,$substrs[1]);
-  my @sub_dirs = ();
-  
-  for (my $begin = 0; $begin <= length($substrs[1]) - $subdir_len; $begin += $subdir_len ) {
-    print substr($substrs[1], $begin, $subdir_len)." beg $begin\n";
-    my $sub_dir_str = substr($substrs[1], $begin, $subdir_len);
-    push (@sub_dirs, $sub_dir_str);
-  }
-  
-  return $substrs[0], @sub_dirs, $version[1] ;  
-}
+sub date_for_homology {
 
+  my $assembly = shift();
+  my $dbname = 'ensembl_genome_metadata';
+  my $dbuser = 'ensro';
+  my $dbpass = '';
+  my $dbhost = 'mysql-ens-production-1';
+  my $dbport = '4721';
+
+  my $prodb = new Bio::EnsEMBL::DBSQL::DBAdaptor(
+    -host => $dbhost,
+    -port => $dbport,
+    -user => $dbuser,
+    -dbname => $dbname,
+    -pass => $dbpass,
+  );
+
+  my $label_query = $prodb->dbc->prepare("SELECT ensembl_release.label \
+      FROM genome  \
+      JOIN genome_release ON genome.genome_id = genome_release.genome_id \
+      JOIN assembly ON genome.assembly_id = assembly.assembly_id \
+      JOIN ensembl_release ON genome_release.release_id = ensembl_release.release_id \
+      WHERE assembly.accession='$assembly' \
+      AND ensembl_release.status='Released' \
+      AND ensembl_release.release_type='Partial' ");
+
+  $label_query->execute();
+  while (my $label_row= $label_query->fetchrow_arrayref()){
+    my ($label) = @$label_row;
+    $label =~ s/\-/_/g;
+    print "$label\n";
+    return $label;
+  }
+
+}
 
 1;
