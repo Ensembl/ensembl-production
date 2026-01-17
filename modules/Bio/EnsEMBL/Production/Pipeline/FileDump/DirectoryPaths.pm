@@ -108,25 +108,15 @@ sub directories {
     $subdirs = catdir(
       $subdirs,
       $self->param_required('annotation_source'),
+      $self->param('geneset'),
       $self->param_required("${data_category}_dirname"),
     );
+
+    if ( $data_category =~ /homology/ ) {
+        $subdirs = catdir ($subdirs, $homology_date_label);
+    }
   }
-  #Genome should just have assembly files.
-   if ( $data_category =~ /genome/ ) {
-      $subdirs = catdir(\
-      $species_dirname,
-      $species_name,
-      $assembly,
-      $self->param_required("${data_category}_dirname"),
-     );
-  }
-  if ( $data_category =~ /geneset|variation|homology/ ) {
-    # Variation, geneset, homology add an extra `YYYY_MM` subdir.
-    $subdirs = catdir ($subdirs, $self->param('geneset'));
-     if ( $data_category =~ /homology/ ) {
-  	$subdirs = catdir ($subdirs, $homology_date_label);
-     }
-  }
+ 
   my $output_dir = catdir(
     $dump_dir,
     $subdirs
