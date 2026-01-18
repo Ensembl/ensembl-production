@@ -27,14 +27,8 @@ class GFFbgzip(eHive.BaseRunnable):
 
         # Split the path into parts and find the index of "organisms"
         path_parts = Path(output_filename).parts
-        try:
-            org_index = path_parts.index("organisms")
-        except ValueError:
-            raise ValueError(f"'organisms' not found in the path: {output_filename}")
-
-        # Construct the new bgzip path by inserting 'vep' directory right after "organisms" subpath
-        new_parts = list(path_parts[:org_index + 3]) + ["vep"] + list(path_parts[org_index + 3:])
-        new_parts[-1] = new_parts[-1] + ".bgz"
+        new_parts = list(path_parts)
+        new_parts[-1] = path_parts[-1] + ".bgz"
         bgzip_filename = str(Path(*new_parts))
 
         # Create the target directory if it does not exist
@@ -44,7 +38,7 @@ class GFFbgzip(eHive.BaseRunnable):
         # Compress the file and index it using bgzip and tabix
         os.system(f"sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' {output_filename} | bgzip -c > {bgzip_filename}")
         os.system(f"tabix -p gff -C {bgzip_filename}")
-        output_location = str(Path(*new_parts[org_index + 1:]))
+        output_location = bgzip_directory
 
         # Log the output paths for debugging purposes
         logging.info(f"Original file: {output_filename}")

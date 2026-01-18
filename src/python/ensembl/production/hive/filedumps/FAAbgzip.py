@@ -32,15 +32,10 @@ class FAAbgzip(eHive.BaseRunnable):
         softmasked_filename = str(Path(output_filename).parent / "softmasked.fa")
         # Split the path into parts and find the index of "organisms"
         path_parts = Path(softmasked_filename).parts
-        try:
-            org_index = path_parts.index("organisms")
-        except ValueError:
-            raise ValueError(f"'organisms' not found in the path: {softmasked_filename}")
-
+        new_parts = list(path_parts)
         # Construct the new bgzip path by inserting 'vep' directory right after "organisms" subpath
-        new_parts = list(path_parts[:org_index + 3]) + ["vep"] + list(path_parts[org_index + 3:])
-        new_parts[-1] = new_parts[-1] + ".bgz"
-        bgzip_filename = str(Path(*new_parts))
+        new_parts[-1] = path_parts[-1] + ".bgz"
+        bgzip_filename = str(Path(*path_parts))
 
         bgzip_directory = Path(bgzip_filename).parent
         bgzip_directory.mkdir(parents=True, exist_ok=True)
@@ -49,7 +44,7 @@ class FAAbgzip(eHive.BaseRunnable):
         os.system(f"bgzip -c {softmasked_filename} > {bgzip_filename}")
         os.system(f"samtools faidx {bgzip_filename}")
 
-        output_location = str(Path(*new_parts[org_index + 1:]))
+        output_location = Path(output_filename).parent
 
         logging.info(f"Original file: {output_filename}")
         logging.info(f"Compressed file: {bgzip_filename}")
