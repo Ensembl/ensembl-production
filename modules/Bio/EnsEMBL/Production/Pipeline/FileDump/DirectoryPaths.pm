@@ -98,7 +98,7 @@ sub directories {
   my $species_name          = $self->param('species_name');
   my $assembly              = $self->param('assembly');
   my @assembly_dir          = split_assembly($assembly);
-  my $homology_date_label   = $self->date_for_homology($assembly);
+  
   my $subdirs;
   my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
   if ( grep( /^$data_category$/, @data_categories ) ) {
@@ -108,25 +108,11 @@ sub directories {
     $subdirs = catdir(
       $subdirs,
       $self->param_required('annotation_source'),
+      $self->date($assembly),
       $self->param_required("${data_category}_dirname"),
     );
   }
-  #Genome should just have assembly files.
-   if ( $data_category =~ /genome/ ) {
-      $subdirs = catdir(\
-      $species_dirname,
-      $species_name,
-      $assembly,
-      $self->param_required("${data_category}_dirname"),
-     );
-  }
-  if ( $data_category =~ /geneset|variation|homology/ ) {
-    # Variation, geneset, homology add an extra `YYYY_MM` subdir.
-    $subdirs = catdir ($subdirs, $self->param('geneset'));
-     if ( $data_category =~ /homology/ ) {
-  	$subdirs = catdir ($subdirs, $homology_date_label);
-     }
-  }
+ 
   my $output_dir = catdir(
     $dump_dir,
     $subdirs
@@ -148,7 +134,7 @@ sub directories {
   return ($output_dir, $web_dir, $ftp_dir);
 }
 
-sub date_for_homology {
+sub date {
 
   my $assembly = shift();
   my $dbname = 'ensembl_genome_metadata';
@@ -178,7 +164,6 @@ sub date_for_homology {
   while (my $label_row= $label_query->fetchrow_arrayref()){
     my ($label) = @$label_row;
     $label =~ s/\-/_/g;
-    print "$label\n";
     return $label;
   }
 
