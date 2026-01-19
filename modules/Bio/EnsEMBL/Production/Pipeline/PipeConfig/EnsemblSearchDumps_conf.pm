@@ -27,7 +27,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 
 sub default_options {
   my ($self) = @_;
@@ -126,7 +126,7 @@ sub pipeline_analyses {
       -flow_into  => {
                       -1 => 'DumpGenesJsonHighmem'
                      },
-      -rc_name    => $self->o('resource_class'),
+      -rc_name    => '50GB_D',
       -analysis_capacity => 10
     },
     {
@@ -143,7 +143,7 @@ sub resource_classes {
   my ($self) = @_;
   return {
     %{$self->SUPER::resource_classes},
-    '100GB_W' => {'SLURM' => '--partition='.$self->o('production_queue').' --time=7-00:00:00  --mem=100000m'},
+    '100GB_W' => {'SLURM' => ' --partition=standard --time=7-00:00:00  --mem=100000m'},
   }
 }
 

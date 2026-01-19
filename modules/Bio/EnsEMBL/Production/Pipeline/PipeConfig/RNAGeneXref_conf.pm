@@ -113,7 +113,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '1->A' => ['FetchRNACentral'],
                             'A->1' => ['DbFactory'],
-                          }
+                          },
     },
 
     {
@@ -137,6 +137,7 @@ sub pipeline_analyses {
       -parameters      => {
                             rnacentral_file_local => $self->o('rnacentral_file_local'),
                           },
+      -rc_name         => '8GB_D',
     },
 
     {
@@ -152,7 +153,8 @@ sub pipeline_analyses {
                           },
       -flow_into       => {
                             '2' => ['AnalysisConfiguration'],
-                          }
+                          },
+      -rc_name         => '4GB_D',                     
     },
 
     {
@@ -165,14 +167,15 @@ sub pipeline_analyses {
       -flow_into 	       => {
                               '2->A' => ['BackupTables'],
                               'A->3' => ['SpeciesFactory'],
-                            }
+                            },
+      -rc_name         => '4GB_D',
     },
 
     {
       -logic_name        => 'BackupTables',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
       -max_retry_count   => 1,
-      -analysis_capacity => 20,
+      -analysis_capacity => 5,
       -parameters        => {
                               table_list  => [
                                 'analysis',
@@ -184,13 +187,14 @@ sub pipeline_analyses {
                               overwrite   => 1,
                             },
       -flow_into         => ['AnalysisSetup'],
+      -rc_name         => '4GB_D',
     },
 
     {
       -logic_name        => 'AnalysisSetup',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
       -max_retry_count   => 0,
-      -analysis_capacity => 20,
+      -analysis_capacity => 5,
       -parameters        => {
                               db_backup_required => 1,
                               db_backup_file     => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
@@ -198,43 +202,46 @@ sub pipeline_analyses {
                               linked_tables      => ['object_xref'],
                               production_lookup  => 1,
                             },
+      -rc_name         => '4GB_D',
     },
 
     {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -max_retry_count   => 1,
-      -analysis_capacity => 20,
+      -analysis_capacity => 5,
       -parameters        => {},
       -flow_into         => {
                               '2' => ['RNACentralXref'],
-                            }
+                            },
+      -rc_name         => '2GB_D',
     },
 
     {
       -logic_name        => 'RNACentralXref',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::RNAGeneXref::RNACentralXref',
       -max_retry_count   => 0,
-      -analysis_capacity => 50,
+      -analysis_capacity => 5,
       -parameters        => {
                               logic_name => $self->o('rnacentral_logic_name'),
                             },
       -flow_into         => ['RunDatachecks'],
+      -rc_name         => '4GB_D',
     },
 
     {
       -logic_name        => 'RunDatachecks',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -max_retry_count   => 1,
-      -analysis_capacity => 10,
+      -analysis_capacity => 1,
       -parameters        => {
                               datacheck_names  => ['ForeignKeys'],
                               config_file      => $self->o('config_file'),
                               history_file     => $self->o('history_file'),
                               failures_fatal   => 1,
                             },
+      -rc_name         => '4GB_D',
     },
-
   ];
 }
 
