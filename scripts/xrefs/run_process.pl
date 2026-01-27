@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #  Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-#  Copyright [2016-2025] EMBL-European Bioinformatics Institute
+#  Copyright [2016-2026] EMBL-European Bioinformatics Institute
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ run_process.pl
 run_process.pl is a generic script that is used to call runnables from a Nextflow .nf file. This script initializes the module object and runs the life cycle of that module: fetch_input(), run(), and write_output()
 =head1 LICENSE
     Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-    Copyright [2016-2022] EMBL-European Bioinformatics Institute
+    Copyright [2016-2026] EMBL-European Bioinformatics Institute
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
          http://www.apache.org/licenses/LICENSE-2.0
