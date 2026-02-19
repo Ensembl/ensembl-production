@@ -25,7 +25,6 @@ class GFFbgzip(eHive.BaseRunnable):
     def run(self):
         output_filename = self.param_required("output_filename")
 
-        # Split the path into parts and find the index of "organisms"
         path_parts = Path(output_filename).parts
         new_parts = list(path_parts)
         new_parts[-1] = path_parts[-1] + ".bgz"
