@@ -20,7 +20,7 @@ class MetadataUpdaterHiveCore(BaseProdRunnable):
 
     def run(self):
         try:
-            run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"))
+            run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"), self.param("taxonomy_uri"))
             run.process_core()
             output = { 'metadata_uri' : self.param("genome_metadata_uri"),
              'database_uri' : self.param("database_uri"),
