@@ -24,25 +24,20 @@ import eHive
 class FAAbgzip(eHive.BaseRunnable):
     def run(self):
         output_filename = self.param_required("output_filename")
-        # This is total garbage. We should not be creating the six jobs to begin with, but I am done with this for now.
-        if "softmasked.fa" not in output_filename:
-            self.dataflow({'attribute_dict': {}, 'trigger_next_step': 0}, 2)
-            self.dataflow({'output_filename': output_filename}, 3)
-            return
-        softmasked_filename = str(Path(output_filename).parent / "softmasked.fa")
+        
         # Split the path into parts and find the index of "organisms"
-        path_parts = Path(softmasked_filename).parts
+        path_parts = Path(output_filename).parts
         new_parts = list(path_parts)
         # Construct the new bgzip path by inserting 'vep' directory right after "organisms" subpath
         new_parts[-1] = path_parts[-1] + ".bgz"
-        bgzip_filename = str(Path(*path_parts))
+        bgzip_filename = str(Path(*new_parts))
 
         bgzip_directory = Path(bgzip_filename).parent
         bgzip_directory.mkdir(parents=True, exist_ok=True)
 
         # Compress the file and index it using bgzip and samtools
-        os.system(f"bgzip -c {softmasked_filename} > {bgzip_filename}")
-        os.system(f"samtools faidx {bgzip_filename}")
+        os.system(f"[ -s {output_filename} ] &&  bgzip -c {output_filename} > {bgzip_filename}")
+        os.system(f"[ -s {output_filename} ] &&  samtools faidx {bgzip_filename}")
 
         output_location = Path(output_filename).parent
 
