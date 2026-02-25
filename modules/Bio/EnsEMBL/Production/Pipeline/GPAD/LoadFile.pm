@@ -39,8 +39,16 @@ sub run {
 
     $self->log()->info("Loading $species from $file");
 
+    my @dbs = @{ Bio::EnsEMBL::Registry->get_all_DBAdaptors() };
+    $self->log()->info("Registry contains " . scalar(@dbs) . " adaptors");
+    foreach my $dba (@dbs) {
+        $self->log()->info("  species=" . $dba->species .
+                           " group="   . $dba->group   .
+                           " class="   . ref($dba)      .
+                           " host="    . $dba->dbc->host .
+                           " dbname="  . $dba->dbc->dbname);
+    }
     my $odba = Bio::EnsEMBL::Registry->get_adaptor('multi', 'ontology', 'OntologyTerm');
-    die "Could not get OntologyTerm adaptor — is the ontology database registered under 'multi'?" unless defined $odba;
     my $gos  = $self->fetch_ontology($odba);
     $odba->dbc->disconnect_if_idle();
 
