@@ -40,6 +40,7 @@ sub run {
     $self->log()->info("Loading $species from $file");
 
     my $odba = Bio::EnsEMBL::Registry->get_adaptor('multi', 'ontology', 'OntologyTerm');
+    die "Could not get OntologyTerm adaptor — is the ontology database registered under 'multi'?" unless defined $odba;
     my $gos  = $self->fetch_ontology($odba);
     $odba->dbc->disconnect_if_idle();
 
