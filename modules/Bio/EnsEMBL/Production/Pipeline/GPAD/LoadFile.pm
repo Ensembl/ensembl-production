@@ -322,7 +322,7 @@ sub run {
             $species_added_via_tgt{$tgt_species}++;
         }
         elsif (!$already_stored) {
-        unless defined $master_xref; {
+        unless (defined $master_xref) {
             $self->log()->debug("Finding tgt_feature via xref");
             die "Line $lineN: no master_xref resolved for '$db_object_id' (db: $db) — cannot attach GO term"
                 unless defined $master_xref;
