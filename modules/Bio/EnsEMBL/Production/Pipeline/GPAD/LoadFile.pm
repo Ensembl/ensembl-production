@@ -29,9 +29,8 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub run {
     my ($self) = @_;
-    # Parse filename to get $target_species
-    my $species = $self->param_required('species');
-    my $file = $self->param_required('gpad_file');
+    my $species    = $self->param_required('species');
+    my $file       = $self->param_required('gpad_file');
     my $logic_name = $self->param_required('logic_name');
 
     my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
@@ -41,49 +40,94 @@ sub run {
     $self->log()->info("Loading $species from $file");
 
     my $odba = Bio::EnsEMBL::Registry->get_adaptor('multi', 'ontology', 'OntologyTerm');
-    my $gos = $self->fetch_ontology($odba);
+    my $gos  = $self->fetch_ontology($odba);
     $odba->dbc->disconnect_if_idle();
 
-    # Retrieve existing or create new analysis object
     my $analysis_adaptor = Bio::EnsEMBL::Registry->get_adaptor($species, "core", "analysis");
-    my $analysis = $analysis_adaptor->fetch_by_logic_name($logic_name);
+    my $analysis         = $analysis_adaptor->fetch_by_logic_name($logic_name);
+    die "Could not find analysis with logic_name '$logic_name' for species '$species'"
+        unless defined $analysis;
 
-    my $tl_adaptor = $dba->get_TranslationAdaptor();
+    my $tl_adaptor  = $dba->get_TranslationAdaptor();
     my $dbe_adaptor = $dba->get_DBEntryAdaptor();
-    my $t_adaptor = $dba->get_TranscriptAdaptor();
+    my $t_adaptor   = $dba->get_TranscriptAdaptor();
 
-    my (%translation_hash, %transcript_hash, %species_missed, %species_added);
-    # When no stable_id or not found in db, try corresponding direct xref
-    my %species_added_via_xref;
-    # When GO mapped to Ensembl stable_id, add as direct xref
-    my %species_added_via_tgt;
-    # UniProt data is the latest, we might not have the links yet
-    # This should be rare though, so numbers should stay low
-    my %unmatched_uniprot;
-    my %unmatched_rnacentral;
-    my %unmatched_protein_id;
-    my %unmatched_wormbase_transcript;
-    my %unmatched_flybase_translation;
-    open my $fh, "<", $file or die "Could not open '$file' for reading : $!";
+    # ------------------------------------------------------------------
+    # Pre-load all translations and their transcripts into memory.
+    # For human/mouse these hashes will be large but give us O(1) lookup
+    # for every tgt_protein stable_id hit in the file, with zero repeat
+    # DB queries.
+    # ------------------------------------------------------------------
+    $self->log()->info("Pre-loading all translations for $species");
+    my %translation_hash;   # stable_id  -> translation object
+    my %transcript_hash;    # stable_id  -> transcript object (keyed by translation stable_id)
+
+    my $all_translations = $tl_adaptor->fetch_all();
+    foreach my $tl (@$all_translations) {
+        my $tl_stable_id = $tl->stable_id;
+        my $tr           = $tl->transcript;
+        die "Transcript not found for translation '$tl_stable_id' during pre-load"
+            unless defined $tr;
+        $translation_hash{$tl_stable_id} = $tl;
+        $transcript_hash{$tl_stable_id}  = $tr;
+    }
+    $self->log()->info("Pre-loaded " . scalar(keys %translation_hash) . " translations");
+
+    # ------------------------------------------------------------------
+    # Pre-load all transcripts into memory, keyed by stable_id.
+    # Used for any path that needs to resolve a transcript stable_id
+    # directly (e.g. tgt_transcript if re-introduced, or future use).
+    # ------------------------------------------------------------------
+    $self->log()->info("Pre-loading all transcripts for $species");
+    my %transcript_by_stable_id;    # stable_id -> transcript object
+
+    my $all_transcripts = $t_adaptor->fetch_all();
+    foreach my $tr (@$all_transcripts) {
+        $transcript_by_stable_id{$tr->stable_id} = $tr;
+    }
+    $self->log()->info("Pre-loaded " . scalar(keys %transcript_by_stable_id) . " transcripts");
+
+    # ------------------------------------------------------------------
+    # Xref caches — we cannot bulk-load these without knowing the IDs
+    # in advance, so we use per-ID caching keyed on accession (and
+    # "$accession|$dbname" where the same accession could appear under
+    # multiple source databases).
+    # ------------------------------------------------------------------
+    my %cache_uniprot;            # fetch_all_by_name($id)
+    my %cache_rnacentral_xref;    # fetch_all_by_name($id, 'RNAcentral')
+    my %cache_rnacentral_trans;   # fetch_all_by_external_name($id)
+    my %cache_protein_id;         # fetch_all_by_name($id, 'protein_id')
+    my %cache_wormbase_xref;      # fetch_all_by_name($id, 'wormbase_transcript')
+    my %cache_wormbase_trans;     # fetch_all_by_external_name($id)
+    my %cache_flybase;            # fetch_all_by_name($id, 'flybase_translation_id')
+    my %cache_ext_name;           # fetch_all_by_external_name($id, $dbname) keyed "$id|$dbname"
+
+    my (%species_added_via_xref, %species_added_via_tgt);
+
+    open my $fh, "<", $file or die "Could not open '$file' for reading: $!";
     my $lineN = 0;
+
     while (<$fh>) {
         chomp $_;
         $lineN++;
         next if $_ =~ /^!/;
 
-        my ($translation, $translations, $transcript, $transcripts, $is_protein, $is_transcript);
+        my ($translation, $translations, $transcript, $transcripts, $is_protein, $is_transcript, $already_stored);
 
         $self->log()->debug($lineN . ": " . $_);
-        # UniProtKB       A0A060MZW1      involved_in     GO:0042254      GO_REF:0000002  ECO:0000256     InterPro:IPR001790|InterPro:IPR030670           20160716        InterPro                tgt_species=entamoeba_histolytica|go_evidence=IEA
-        #or
-        # UniProtKB\tA0A1I9WA83\tenables\tGO:0004129\tGO_REF:0000107\tECO:0000265\tUniProtKB:P00403|ensembl:ENSP00000354876\t\t20180303\tEnsembl\t\ttgt_species=ailuropoda_melanoleuca|tgt_gene=ensembl:ENSAMEG00000023439|tgt_protein=ensembl:ENSAMEP00000021356|src_species=homo_sapiens|src_gene=ensembl:ENSG00000198712|src_protein=ensembl:ENSP00000354876|go_evidence=IEA
-        # Mind the multiple misleading \t
-        my ($db, $db_object_id, $qualifier, $go_id, $go_ref, $eco, $with, $taxon_id, $date, $assigned_by, $annotation_extension, $annotation_properties) = split /\t/, $_;
-        $self->log()->debug("Parsed: " . sprintf("db %s, db_object_id %s, qualifier %s, go_id %s, go_ref %s, eco %s, with %s, date %s, assigned_by %s, annotation_properties %s ", $db, $db_object_id, $qualifier, $go_id, $go_ref, $eco, $with, $date, $assigned_by, $annotation_properties));
-        # Parse annotation information
-        # $go_evidence and $tgt_species should always be populated
-        # The remaining fields might or might not, but they should alwyays be available in that order
-        my ($go_evidence, $tgt_species, $tgt_gene, $tgt_protein, $tgt_transcript, $src_species, $src_gene, $src_protein, $precursor_rna);
+
+        my ($db, $db_object_id, $qualifier, $go_id, $go_ref, $eco, $with, $taxon_id,
+            $date, $assigned_by, $annotation_extension, $annotation_properties) = split /\t/, $_;
+
+        $self->log()->debug("Parsed: " . sprintf(
+            "db %s, db_object_id %s, qualifier %s, go_id %s, go_ref %s, eco %s, ".
+            "with %s, date %s, assigned_by %s, annotation_properties %s ",
+            $db, $db_object_id, $qualifier, $go_id, $go_ref, $eco,
+            $with, $date, $assigned_by, $annotation_properties));
+
+        my ($go_evidence, $tgt_species, $tgt_gene, $tgt_protein,
+            $src_species, $src_gene, $src_protein, $precursor_rna);
+
         foreach my $annotation_propertie (split /\|/, $annotation_properties) {
             if ($annotation_propertie =~ m/tgt_gene/) {
                 $annotation_propertie =~ s/tgt_gene=\w+://;
@@ -100,10 +144,6 @@ sub run {
             elsif ($annotation_propertie =~ m/tgt_protein/) {
                 $annotation_propertie =~ s/tgt_protein=[\w\-\d\.]+://;
                 $tgt_protein = $annotation_propertie;
-            }
-            elsif ($annotation_propertie =~ m/tgt_transcript/) {
-                $annotation_propertie =~ s/tgt_transcript=//;
-                $tgt_transcript = $annotation_propertie;
             }
             elsif ($annotation_propertie =~ m/src_protein/) {
                 $annotation_propertie =~ s/src_protein=[\w\-]+://;
@@ -122,22 +162,26 @@ sub run {
                 $precursor_rna = $annotation_propertie;
             }
             else {
-                $self->warning("Error parsing $annotation_propertie, not matching any expected annotation\n");
+                die "Line $lineN: could not parse annotation property '$annotation_propertie'";
             }
         }
 
-        # target species should always be the same as production name in the GOA file
-        next unless $tgt_species =~ /$species/;
+        # This is intentional filtering — the GOA file covers many species
+        # and we only process records for the species we were given.
+        if ($tgt_species !~ /$species/){
+                    die "Line $lineN: tgt_species does not match" ;
+        };
+        die "Line $lineN: go_id is undefined or empty" unless defined $go_id && $go_id ne '';
+        die "Line $lineN: go_evidence is undefined or empty" unless defined $go_evidence && $go_evidence ne '';
 
         $self->log()->debug("Creating GO xref for $go_id");
         my $info_type = 'DIRECT';
         my $info_text = $assigned_by;
         if ($assigned_by =~ /Ensembl/ and defined $src_protein) {
             $info_text = "from $src_species translation $src_protein";
-            $info_type = 'PROJECTION'
+            $info_type = 'PROJECTION';
         }
 
-        # Create new GO dbentry object
         my $go_xref = Bio::EnsEMBL::OntologyXref->new(
             -primary_id         => $go_id,
             -display_id         => $go_id,
@@ -150,184 +194,184 @@ sub run {
 
         $go_xref->analysis($analysis);
         my $master_xref;
-        # There could technically be more than one xref with the same display_label
-        # In practice, we just want to add it as master_xref, so the first one is fine
-        # Distinguish if data is UniProt (proteins), RNACentral (transcripts), Protein_id (proteins),
-        # wormbase_transcript (transcripts), flybase_translation_id (translations)
 
-        $self->log()->debug("DB " . $db . " Go Evidence " . $go_evidence);
+        $self->log()->debug("DB $db Go Evidence $go_evidence");
+
         if ($db =~ /UniProt/) {
             $self->log()->debug("Adding linkage to UniProt");
             $is_protein = 1;
-            my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id);
-            my @master_xref = grep {$_->dbname =~ m/uniprot/i} @$uniprot_xrefs;
-            if (scalar(@master_xref) != 0) {
-                $master_xref = $master_xref[0];
-                $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
+
+            unless (exists $cache_uniprot{$db_object_id}) {
+                $cache_uniprot{$db_object_id} = $dbe_adaptor->fetch_all_by_name($db_object_id);
             }
-            else {
-                $unmatched_uniprot{$tgt_species}++;
-            }
+            my @master_xref = grep { $_->dbname =~ m/uniprot/i } @{ $cache_uniprot{$db_object_id} };
+
+            die "Line $lineN: no UniProt xref found in core DB for '$db_object_id'"
+                unless scalar(@master_xref) != 0;
+
+            $master_xref = $master_xref[0];
+            $go_xref->add_linkage_type($go_evidence, $master_xref);
         }
         elsif ($db =~ /RNAcentral/) {
             $self->log()->debug("Adding linkage to RNAcentral");
             $is_transcript = 1;
-            # For microRNAs, GOA link terms to the product; however, we annotate GO terms
-            # against transcripts, not mature products, i.e. precursor miRNAs. Fortunately,
-            # the accessions for the precursor(s) are in the GPAD file, so we can use those
-            # instead of the standard RNAcentral accession that we use for everything else.
-            my @db_object_ids;
-            if ($precursor_rna) {
-                @db_object_ids = split(",", $precursor_rna);
-            }
-            else {
-                @db_object_ids = ($db_object_id)
-            }
+
+            my @db_object_ids = $precursor_rna ? split(",", $precursor_rna) : ($db_object_id);
+
             foreach my $db_object_id (@db_object_ids) {
-                # The ID has the taxonomy id appended, e.g. URS0000007FBA_9606
-                # We store as URS0000007FBA, so need to remove the suffix.
                 $db_object_id =~ s/_[0-9]+$//;
-                my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNAcentral');
-                if (scalar(@$rnacentral_xrefs) != 0) {
-                    $master_xref = $rnacentral_xrefs->[0];
-                    $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
-                    $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
-                    foreach my $transcript (@$transcripts) {
-                        $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
-                        $species_added_via_xref{$tgt_species}++;
-                    }
+
+                unless (exists $cache_rnacentral_xref{$db_object_id}) {
+                    $cache_rnacentral_xref{$db_object_id} =
+                        $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNAcentral');
                 }
-                else {
-                    $unmatched_rnacentral{$tgt_species}++;
+                die "Line $lineN: no RNAcentral xref found in core DB for '$db_object_id'"
+                    unless scalar(@{ $cache_rnacentral_xref{$db_object_id} }) != 0;
+
+                $master_xref = $cache_rnacentral_xref{$db_object_id}->[0];
+                $go_xref->add_linkage_type($go_evidence, $master_xref);
+
+                unless (exists $cache_rnacentral_trans{$db_object_id}) {
+                    $cache_rnacentral_trans{$db_object_id} =
+                        $t_adaptor->fetch_all_by_external_name($db_object_id);
                 }
-            }
-        }
-        elsif (lc($db) =~ /ena/) {
-            $self->log()->debug("Adding linkage to Protein ID");
-            $is_protein = 1;
-            my $protein_id_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'protein_id');
-            if (scalar(@$protein_id_xrefs) != 0) {
-                $master_xref = $protein_id_xrefs->[0];
-                $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
-            }
-            else {
-                $unmatched_protein_id{$tgt_species}++;
-            }
-        }
-        elsif (lc($db) =~ /wormbase/) {
-            $self->log()->debug("Adding linkage to Wormbase Transcript");
-            $is_transcript = 1;
-            my $wormbase_transcript_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'wormbase_transcript');
-            if (scalar(@$wormbase_transcript_xrefs) != 0) {
-                $master_xref = $wormbase_transcript_xrefs->[0];
-                $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
-                $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
-                foreach my $transcript (@$transcripts) {
+                die "Line $lineN: no transcripts found via RNAcentral xref '$db_object_id'"
+                    unless scalar(@{ $cache_rnacentral_trans{$db_object_id} }) != 0;
+
+                foreach my $transcript (@{ $cache_rnacentral_trans{$db_object_id} }) {
                     $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
                     $species_added_via_xref{$tgt_species}++;
                 }
             }
-            else {
-                $unmatched_wormbase_transcript{$tgt_species}++;
+            $already_stored = 1;  # storage was handled above — skip the fallback stage entirely
+        }
+        elsif (lc($db) =~ /ena/) {
+            $self->log()->debug("Adding linkage to Protein ID");
+            $is_protein = 1;
+
+            unless (exists $cache_protein_id{$db_object_id}) {
+                $cache_protein_id{$db_object_id} =
+                    $dbe_adaptor->fetch_all_by_name($db_object_id, 'protein_id');
             }
+            die "Line $lineN: no protein_id xref found in core DB for '$db_object_id'"
+                unless scalar(@{ $cache_protein_id{$db_object_id} }) != 0;
+
+            $master_xref = $cache_protein_id{$db_object_id}->[0];
+            $go_xref->add_linkage_type($go_evidence, $master_xref);
+        }
+        elsif (lc($db) =~ /wormbase/) {
+            $self->log()->debug("Adding linkage to Wormbase Transcript");
+            $is_transcript = 1;
+
+            unless (exists $cache_wormbase_xref{$db_object_id}) {
+                $cache_wormbase_xref{$db_object_id} =
+                    $dbe_adaptor->fetch_all_by_name($db_object_id, 'wormbase_transcript');
+            }
+            die "Line $lineN: no wormbase_transcript xref found in core DB for '$db_object_id'"
+                unless scalar(@{ $cache_wormbase_xref{$db_object_id} }) != 0;
+
+            $master_xref = $cache_wormbase_xref{$db_object_id}->[0];
+            $go_xref->add_linkage_type($go_evidence, $master_xref);
+
+            unless (exists $cache_wormbase_trans{$db_object_id}) {
+                $cache_wormbase_trans{$db_object_id} =
+                    $t_adaptor->fetch_all_by_external_name($db_object_id);
+            }
+            die "Line $lineN: no transcripts found via wormbase_transcript xref '$db_object_id'"
+                unless scalar(@{ $cache_wormbase_trans{$db_object_id} }) != 0;
+
+            foreach my $transcript (@{ $cache_wormbase_trans{$db_object_id} }) {
+                $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
+                $species_added_via_xref{$tgt_species}++;
+            }
+            $already_stored = 1;  # storage was handled above — skip the fallback stage entirely
         }
         elsif (lc($db) =~ /flybase/) {
             $self->log()->debug("Adding linkage to Flybase translation");
             $is_protein = 1;
-            my $flybase_translation_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'flybase_translation_id');
-            if (scalar(@$flybase_translation_xrefs) != 0) {
-                $master_xref = $flybase_translation_xrefs->[0];
-                $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
+
+            unless (exists $cache_flybase{$db_object_id}) {
+                $cache_flybase{$db_object_id} =
+                    $dbe_adaptor->fetch_all_by_name($db_object_id, 'flybase_translation_id');
             }
-            else {
-                $unmatched_flybase_translation{$tgt_species}++;
-            }
+            die "Line $lineN: no flybase_translation_id xref found in core DB for '$db_object_id'"
+                unless scalar(@{ $cache_flybase{$db_object_id} }) != 0;
+
+            $master_xref = $cache_flybase{$db_object_id}->[0];
+            $go_xref->add_linkage_type($go_evidence, $master_xref);
         }
         else {
             $self->log()->debug("Adding default linkage");
-            $go_xref->add_linkage_type($go_evidence) if defined($go_evidence);
+            $go_xref->add_linkage_type($go_evidence);
         }
 
         if (defined $tgt_protein) {
-            # If GOA provide a tgt_protein, this is the direct mapping to Ensembl feature
-            # This becomes our object for the new xref
             $self->log()->debug("Looking for protein $tgt_protein");
-            if ($translation_hash{$tgt_protein}) {
-                $translation = $translation_hash{$tgt_protein};
-                $transcript = $transcript_hash{$tgt_protein};
-            }
-            else {
-                $translation = $tl_adaptor->fetch_by_stable_id($tgt_protein);
-                if (defined $translation or $translation ne '') {
-                    if (defined ($translation->transcript)) {
-                         $transcript = $translation->transcript;
-                         $transcript_hash{$tgt_protein} = $transcript;
-                         $translation_hash{$tgt_protein} = $translation;
-                    } else {
-                        $self->log()->warn("Transcript not found for protein $tgt_protein");
-                    }
-                                
-                } else {
-                    $self->log()->warn("Translation does not exist or is blank");
-                }
-            }
 
-            if (defined $translation) {
-                $self->log()->debug("Storing on transcript " . $transcript->dbID());
-                $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
-                $species_added_via_tgt{$tgt_species}++;
-            }
-            else {
-                $self->log()->debug("Protein $tgt_protein not found");
-                $species_missed{$tgt_species}++;
-            }
-            # If GOA provide a tgt_transcript, it could be a list of transcript mappings
+            # Use the pre-loaded translation/transcript hashes — no DB call needed
+            die "Line $lineN: translation '$tgt_protein' not found in pre-loaded translation set"
+                unless exists $translation_hash{$tgt_protein};
+            die "Line $lineN: transcript not found for translation '$tgt_protein' in pre-loaded set"
+                unless defined $transcript_hash{$tgt_protein};
+
+            $translation = $translation_hash{$tgt_protein};
+            $transcript  = $transcript_hash{$tgt_protein};
+
+            $self->log()->debug("Storing on transcript " . $transcript->dbID());
+            $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
+            $species_added_via_tgt{$tgt_species}++;
         }
-        elsif (defined $tgt_transcript) {
+        elsif (!$already_stored) {
+        unless defined $master_xref; {
+            $self->log()->debug("Finding tgt_feature via xref");
+            die "Line $lineN: no master_xref resolved for '$db_object_id' (db: $db) — cannot attach GO term"
+                unless defined $master_xref;
 
-            $self->log()->debug("Handling tgt_transcripts $tgt_transcript");
-            my @tgt_transcripts = split(",", $tgt_transcript);
+            if ($is_protein) {
+                $self->log()->debug("Finding protein $db_object_id");
 
-            foreach my $transcript (@tgt_transcripts) {
-                $self->log()->debug("Storing on transcript " . $transcript->dbID());
-                $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
-                $species_added_via_tgt{$tgt_species}++;
+                my $ext_key = $db_object_id . '|' . $master_xref->dbname;
+                unless (exists $cache_ext_name{$ext_key}) {
+                    $cache_ext_name{$ext_key} =
+                        $tl_adaptor->fetch_all_by_external_name($db_object_id, $master_xref->dbname);
+                }
+                $translations = $cache_ext_name{$ext_key};
+
+                die "Line $lineN: no translations found via external name '$db_object_id' (dbname: " .
+                    $master_xref->dbname . ")"
+                    unless scalar(@$translations) != 0;
+
+                foreach my $translation (@$translations) {
+                    $self->log()->debug("Attaching via translation to transcript " .
+                        $translation->transcript()->dbID());
+                    $dbe_adaptor->store($go_xref, $translation->transcript->dbID,
+                        'Transcript', 1, $master_xref);
+                    $species_added_via_xref{$tgt_species}++;
+                }
             }
-        }
-        # If GOA did not provide a tgt_transcript or tgt_protein, we have to guess the correct target based on our xrefs
-        # This is slower, hence only used if nothing better is available
-        else {
-            $self->log()->debug("Finding tgt_feature");
-            if (defined $master_xref) {
-                if ($is_protein) {
-                    $self->log()->debug("Finding protein $db_object_id");
-                    $translations = $tl_adaptor->fetch_all_by_external_name($db_object_id, $master_xref->dbname);
-                    if (scalar @$translations == 0) {
-                        $self->log()->debug("Could not find translation for $db_object_id");
-                    }
-                    # Protein xref is attached to translation
-                    # But GO term should be attached to transcript
-                    foreach my $translation (@$translations) {
-                        $self->log()->debug("Attaching via translation to transcript " . $translation->transcript()->dbID());
-                        $dbe_adaptor->store($go_xref, $translation->transcript->dbID, 'Transcript', 1, $master_xref);
-                        $species_added_via_xref{$tgt_species}++;
-                    }
+            elsif ($is_transcript) {
+                $self->log()->debug("Finding transcript $db_object_id");
+
+                my $ext_key = $db_object_id . '|' . $master_xref->dbname;
+                unless (exists $cache_ext_name{$ext_key}) {
+                    $cache_ext_name{$ext_key} =
+                        $t_adaptor->fetch_all_by_external_name($db_object_id, $master_xref->dbname);
                 }
-                elsif ($is_transcript) {
-                    $self->log()->debug("Finding transcript $db_object_id");
-                    $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id, $master_xref->dbname);
-                    foreach my $transcript (@$transcripts) {
-                        $self->log()->debug("Attaching to transcript " . $transcript->dbID());
-                        $dbe_adaptor->store($go_xref, $transcript->dbID(), 'Transcript', 1, $master_xref);
-                        $species_added_via_xref{$tgt_species}++;
-                    }
-                }
-                else {
-                    $self->log()->debug("Couldn't figure out how to find target feature");
+                $transcripts = $cache_ext_name{$ext_key};
+
+                die "Line $lineN: no transcripts found via external name '$db_object_id' (dbname: " .
+                    $master_xref->dbname . ")"
+                    unless scalar(@$transcripts) != 0;
+
+                foreach my $transcript (@$transcripts) {
+                    $self->log()->debug("Attaching to transcript " . $transcript->dbID());
+                    $dbe_adaptor->store($go_xref, $transcript->dbID(), 'Transcript', 1, $master_xref);
+                    $species_added_via_xref{$tgt_species}++;
                 }
             }
             else {
-                $self->log()->debug("Source xref not in core database");
+                die "Line $lineN: db source '$db' did not set is_protein or is_transcript — " .
+                    "cannot determine target feature type";
             }
         }
     }
