@@ -19,18 +19,15 @@ from ensembl.production.metadata.updater.core import CoreMetaUpdater
 class MetadataUpdaterHiveCore(BaseProdRunnable):
 
     def run(self):
-        try:
-            run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"), self.param("taxonomy_uri"))
-            run.process_core()
-            output = { 'metadata_uri' : self.param("genome_metadata_uri"),
-             'database_uri' : self.param("database_uri"),
-             'email': self.param("email")
-            }
+		
+		run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"), self.param("taxonomy_uri"))
+		run.process_core()
+		output = { 'metadata_uri' : self.param("genome_metadata_uri"),
+		 'database_uri' : self.param("database_uri"),
+		 'email': self.param("email")
+		}
 
-            self.dataflow({
-			    'job_id' : self.input_job.dbID,
-			    'output' : json.dumps(output)
-			}, 2);
-
-        except Exception as e : 
-            raise ValueError(str(e))
+		self.dataflow({
+			'job_id' : self.input_job.dbID,
+			'output' : json.dumps(output)
+		}, 2);
