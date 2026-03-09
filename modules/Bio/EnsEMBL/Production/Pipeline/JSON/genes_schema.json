@@ -224,6 +224,18 @@
                       "properties": {
                         "is_canonical": {
                           "type": "boolean"
+                        },
+                        "MANE_Select": {
+                          "type": "string"
+                        },
+                        "MANE_Plus_Clinical": {
+                          "type": "string"
+                        },
+                        "apprisq": {
+                          "type": "string"
+                        },
+                        "TSL": {
+                          "type": "string"
                         }
                       }
                     },			

@@ -104,7 +104,7 @@ sub remodel_gene {
     my $new_transcript =
       $self->copy_hash(
         $transcript,
-        qw/id name description biotype seq_region_name start end strand/
+        qw/id name description biotype seq_region_name start end strand attrib/
       );
     $self->collate_xrefs( $transcript, $new_transcript );
     # process translations
