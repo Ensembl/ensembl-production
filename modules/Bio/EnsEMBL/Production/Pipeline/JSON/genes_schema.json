@@ -212,7 +212,7 @@
                     "start",
                     "strand",
                     "xrefs",
-		    "attrib"
+		            "attrib"
                 ],
                 "type": "object",
                 "properties": {
@@ -236,8 +236,17 @@
                         },
                         "TSL": {
                           "type": "string"
+                        },
+                        "gencode_primary": {
+                          "type": "string"
+                        },
+                        "gencode_basic": {
+                          "type": "string"
+                        },
+                        "ens_canon_extended": {
+                          "type": "string"
                         }
-                      }
+                        }
                     },			
                     "exons": {
                         "items": {
