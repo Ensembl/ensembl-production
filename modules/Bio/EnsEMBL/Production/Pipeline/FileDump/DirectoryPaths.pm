@@ -105,10 +105,24 @@ sub directories {
     foreach my $asm_dir (@assembly_dir){
      $subdirs = catdir( $subdirs, $asm_dir);
     }
+
+    my $date = "no_date";
+    my $sql = "SELECT meta_value from meta where meta_key='genebuild.last_geneset_update'";
+    my @label_query = @{
+        $self->dba->dbc()->sql_helper()->execute(
+            -SQL          => $sql,
+            -USE_HASHREFS => 1)};
+
+    for my $label (@label_query) {
+      $label = $label->{meta_value};
+      $label =~ s/\-/_/g;
+      $date = $label;
+    }
+
     $subdirs = catdir(
       $subdirs,
       $self->param_required('annotation_source'),
-      $self->date($assembly),
+      $date,
       $self->param_required("${data_category}_dirname"),
     );
   }
@@ -134,39 +148,5 @@ sub directories {
   return ($output_dir, $web_dir, $ftp_dir);
 }
 
-sub date {
-
-  my $assembly = shift();
-  my $dbname = 'ensembl_genome_metadata';
-  my $dbuser = 'ensro';
-  my $dbpass = '';
-  my $dbhost = 'mysql-ens-production-1';
-  my $dbport = '4721';
-
-  my $prodb = new Bio::EnsEMBL::DBSQL::DBAdaptor(
-    -host => $dbhost,
-    -port => $dbport,
-    -user => $dbuser,
-    -dbname => $dbname,
-    -pass => $dbpass,
-  );
-
-  my $label_query = $prodb->dbc->prepare("SELECT ensembl_release.label \
-      FROM genome  \
-      JOIN genome_release ON genome.genome_id = genome_release.genome_id \
-      JOIN assembly ON genome.assembly_id = assembly.assembly_id \
-      JOIN ensembl_release ON genome_release.release_id = ensembl_release.release_id \
-      WHERE assembly.accession='$assembly' \
-      AND ensembl_release.status='Released' \
-      AND ensembl_release.release_type='Partial' ");
-
-  $label_query->execute();
-  while (my $label_row= $label_query->fetchrow_arrayref()){
-    my ($label) = @$label_row;
-    $label =~ s/\-/_/g;
-    return $label;
-  }
-
-}
 
 1;
