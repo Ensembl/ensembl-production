@@ -35,7 +35,7 @@ class GFFbgzip(eHive.BaseRunnable):
         bgzip_directory.mkdir(parents=True, exist_ok=True)
 
         # Compress the file and index it using bgzip and tabix
-        os.system(f"sed -i '/###/d' {output_filename} && sed -i 's/#!/0 0##!/g' {output_filename} &&  sed -i 's/##/0 1##/g' {output_filename} && sort -o {output_filename} -k1,1 -k4,4n -k5,5n -t$\'\\t\' {output_filename}  && sed -i 's/0 1##/##/g' {output_filename} && sed -i 's/##!/#!/g' {output_filename} && cat {output_filename} | bgzip -c > {bgzip_filename}")
+        os.system(f"sed -i '/###/d' {output_filename} && sed -i 's/#!/0 0##!/g' {output_filename} &&  sed -i 's/##/0 1##/g' {output_filename} && sort -o {output_filename} -k1,1 -k4,4n -k5,5n -t$\'\\t\' {output_filename}  && sed -i 's/0 1##/##/g' {output_filename} && sed -i 's/0 0##!/#!/g' {output_filename} && cat {output_filename} | bgzip -c > {bgzip_filename}")
         os.system(f"tabix -p gff -C {bgzip_filename}")
         output_location = bgzip_directory
 
