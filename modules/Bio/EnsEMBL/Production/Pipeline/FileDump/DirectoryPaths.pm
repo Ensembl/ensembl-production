@@ -125,6 +125,39 @@ sub directories {
       $date,
       $self->param_required("${data_category}_dirname"),
     );
+
+     if ($data_category eq "homology") {
+  	my $dbname = 'ensembl_genome_metadata';
+  	my $dbuser = 'ensro';
+  	my $dbpass = '';
+  	my $dbhost = 'mysql-ens-production-1';
+  	my $dbport = '4721';
+
+        my $prodb = new Bio::EnsEMBL::DBSQL::DBAdaptor(
+    		-host => $dbhost,
+    		-port => $dbport,
+    		-user => $dbuser,
+    		-dbname => $dbname,
+    		-pass => $dbpass,
+  	);
+
+  	my $label_query = $prodb->dbc->prepare("SELECT ensembl_release.label \
+      	FROM genome  \
+      	JOIN genome_release ON genome.genome_id = genome_release.genome_id \
+      	JOIN assembly ON genome.assembly_id = assembly.assembly_id \
+      	JOIN ensembl_release ON genome_release.release_id = ensembl_release.release_id \
+      	WHERE assembly.accession='$assembly' \
+      	AND ensembl_release.status='Released' \
+      	AND ensembl_release.release_type='Partial' ");
+	my $label = "";
+  	$label_query->execute();
+  	while (my $label_row= $label_query->fetchrow_arrayref()){
+    		($label) = @$label_row;
+    		$label =~ s/\-/_/g;
+    		print "$label\n";
+  	}
+    	$subdirs = catdir($subdirs, $label);
+     }
   }
  
   my $output_dir = catdir(
