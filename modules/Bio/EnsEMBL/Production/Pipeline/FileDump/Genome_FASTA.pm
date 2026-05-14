@@ -66,14 +66,6 @@ sub run {
 
   #dump all into single file
   $self->print_to_file([@$chr, @$non_chr, @$non_ref ], undef, $sm_filename, '>', $repeat_analyses);
-  # if ($per_chromosome && scalar(@$chr)) {
-  #   $self->print_to_file($chr, 'chr', $sm_filename, '>', $repeat_analyses);
-  #   if (scalar(@$non_chr)) {
-  #     $self->print_to_file($non_chr, 'non_chr', $sm_filename, '>>', $repeat_analyses);
-  #   }
-  # } else {
-  #   $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
-  # }
   if($self->param('unmasked')){
       $self->unmask($sm_filename, $um_filename);
   }
@@ -82,22 +74,14 @@ sub run {
   }
 
 
-  # if (scalar(@$non_ref)) {
-  #   my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
-  #   my $sm_non_ref_filename = $self->generate_non_ref_filename($sm_filename);
-  #   my $hm_non_ref_filename = $self->generate_non_ref_filename($hm_filename);
-  #   path($sm_filename)->copy($sm_non_ref_filename);
-
-  #   $self->print_to_file($non_ref, undef, $sm_non_ref_filename, '>>', $repeat_analyses);
-
-  #   $self->unmask($sm_non_ref_filename, $um_non_ref_filename);
-  #   $self->hardmask($sm_non_ref_filename, $hm_non_ref_filename);
-  # }
-
   if ($blast_index) {
-    $self->blast_index($um_filename, 'nucl');
-    $self->blast_index($sm_filename, 'nucl');
-    $self->blast_index($hm_filename, 'nucl');
+      $self->blast_index($sm_filename, 'nucl');
+      if ($self->param('unmasked')) {
+          $self->blast_index($um_filename, 'nucl');
+      }
+      if ($self->param('hardmasked')) {
+          $self->blast_index($hm_filename, 'nucl');
+      }
   }
 }
 
@@ -112,8 +96,6 @@ sub print_to_file {
 
   my $serializer = $self->fasta_serializer($sm_filename, $mode);
 
-  # If per-chromosome files are required, to reduce duplication and
-  # filespace usage, only soft-masked versions of those files are made.
   my $non_chr_serializer;
   if ($region && $region eq 'non_chr') {
     my $non_chr_filename = $self->generate_non_chr_filename($sm_filename);
