@@ -21,28 +21,178 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::EnsemblBlastDumps_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::BlastFileDump_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::default_options},
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::default_options},
 
-    genome_types => [
-      'Genome_FASTA',
-    ],
-    geneset_types => [
-      'Geneset_FASTA',
-    ],
-    rnaseq_types => [],
+        # Output
+        dump_dir             => undef,
+        overwrite            => 0,
 
-    dump_metadata => 1,
+        # BLAST executable
+        blastdb_exe          => 'makeblastdb',
 
-    blast_index => 1,
-    
-    run_datachecks   => 1,
-    datacheck_groups => ['rapid_release'],
-  };
+        # FASTA dump options
+        softmasked           => 1,
+        unmasked             => 1,
+        hardmasked           => 0,
+        cds                  => 0,
+        fasta_header_prefix  => 'ENSEMBL:',
+
+        # Enable inline blast indexing
+        blast_index          => 1,
+
+        # Genome factory - driven by dataset status/type in metadata DB
+        dataset_status        => 'Submitted',
+        dataset_type          => 'blast',
+        update_dataset_status => 'Processing',
+    };
+}
+
+sub pipeline_create_commands {
+    my ($self) = @_;
+    return [
+        @{$self->SUPER::pipeline_create_commands},
+        'mkdir -p ' . $self->o('dump_dir'),
+    ];
+}
+
+sub hive_meta_table {
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::hive_meta_table},
+        hive_use_param_stack => 1,
+    };
+}
+
+sub pipeline_wide_parameters {
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::pipeline_wide_parameters},
+        dump_dir  => $self->o('dump_dir'),
+        overwrite => $self->o('overwrite'),
+    };
+}
+
+sub pipeline_analyses {
+    my ($self) = @_;
+
+    return [
+        @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
+
+        {
+            -logic_name        => 'SpeciesFactory',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {},
+            -flow_into         => {
+                '2' => [
+                    'GenomeDirectoryPaths',
+                    'GenesetDirectoryPaths',
+                ],
+            },
+            -rc_name           => '4GB_D',
+        },
+        {
+            -logic_name        => 'GenomeDirectoryPaths',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::BlastDirectoryPaths',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                data_category  => 'genome',
+                analysis_types => ['Genome_FASTA'],
+            },
+            -flow_into         => {
+                '3' => ['Genome_FASTA'],
+            },
+            -rc_name           => '4GB_D',
+        },
+        {
+            -logic_name        => 'GenesetDirectoryPaths',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::BlastDirectoryPaths',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                data_category  => 'geneset',
+                analysis_types => ['Geneset_FASTA'],
+            },
+            -flow_into         => {
+                '3' => ['Geneset_FASTA'],
+            },
+            -rc_name           => '4GB_D',
+        },
+        {
+            -logic_name      => 'Genome_FASTA',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                blast_index         => $self->o('blast_index'),
+                blastdb_exe         => $self->o('blastdb_exe'),
+                unmasked            => $self->o('unmasked'),
+                softmasked          => $self->o('softmasked'),
+                hardmasked          => $self->o('hardmasked'),
+                overwrite           => 1,
+                fasta_header_prefix => $self->o('fasta_header_prefix'),
+            },
+            -rc_name         => '32GB_D',
+            -flow_into       => {
+                '-1' => ['Genome_FASTA_mem'],
+            },
+        },
+        {
+            -logic_name      => 'Genome_FASTA_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                blast_index         => $self->o('blast_index'),
+                blastdb_exe         => $self->o('blastdb_exe'),
+                unmasked            => $self->o('unmasked'),
+                softmasked          => $self->o('softmasked'),
+                hardmasked          => $self->o('hardmasked'),
+                overwrite           => 1,
+                fasta_header_prefix => $self->o('fasta_header_prefix'),
+            },
+            -rc_name         => '50GB_D',
+        },
+        {
+            -logic_name      => 'Geneset_FASTA',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_FASTA',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                blast_index         => $self->o('blast_index'),
+                blastdb_exe         => $self->o('blastdb_exe'),
+                cds                 => $self->o('cds'),
+                fasta_header_prefix => $self->o('fasta_header_prefix'),
+            },
+            -rc_name         => '32GB_D',
+            -flow_into       => {
+                '-1' => ['Geneset_FASTA_mem'],
+            },
+        },
+        {
+            -logic_name      => 'Geneset_FASTA_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_FASTA',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                blast_index         => $self->o('blast_index'),
+                blastdb_exe         => $self->o('blastdb_exe'),
+                overwrite           => 1,
+                cds                 => $self->o('cds'),
+                fasta_header_prefix => $self->o('fasta_header_prefix'),
+            },
+            -rc_name         => '50GB_D',
+        },
+    ];
 }
 
 1;

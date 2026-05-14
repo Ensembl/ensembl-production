@@ -219,15 +219,31 @@ sub create_blast_index {
 
   $self->assert_executable($blastdb_exe);
 
+  # Validate no non-ASCII characters before indexing.
+  # Non-ASCII in FASTA sequences will cause makeblastdb to produce
+  # corrupt or invalid databases without necessarily erroring.
+  open(my $fh, '<', $in)
+    or $self->throw("Cannot open FASTA file '$in' for validation: $!");
+  my $line_num = 0;
+  while (my $line = <$fh>) {
+    $line_num++;
+    if ($line =~ /[^\x00-\x7F]/) {
+      close($fh);
+      $self->throw(
+        "Non-ASCII character found in '$in' at line $line_num. "
+        . "Source FASTA must be ASCII-clean before BLAST indexing."
+      );
+    }
+  }
+  close($fh);
+
   my $title = path($out)->basename('.fa');
-  my $cmd = "$blastdb_exe -in $in -out $out -dbtype $dbtype -title $title -input_type fasta";
+  my $cmd = "$blastdb_exe -in $in -out $out -dbtype $dbtype -title $title "
+          . "-input_type fasta -max_file_sz 4GB -blastdb_version 4";
   my ($rc, $output) = $self->run_cmd($cmd);
 
   if ($rc) {
-    my $msg =
-      "BLAST failed for '$out'\n".
-      "Output: $output";
-    $self->throw($msg);
+    $self->throw("BLAST indexing failed for '$out'\nOutput: $output");
   }
 }
 
