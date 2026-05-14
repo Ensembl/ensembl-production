@@ -77,33 +77,14 @@ sub write_output {
 sub directories {
   my ($self, $data_category) = @_;
 
-  my $dump_dir                    = $self->param_required('dump_dir');
-  my $species_dirname             = $self->param_required('species_dirname');
-  my $web_dirname                 = $self->param_required('web_dirname');
-  my $species_production_name     = $self->param('species');
-  my $assembly                    = $self->param('assembly');
+  my $dump_dir     = $self->param_required('dump_dir');
+  my $genome_uuid  = $self->param_required('genome_uuid');
+  my $uuid_prefix  = substr($genome_uuid, 0, 3);
 
-  my $subdirs;
-  my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
-  if ( grep( /^$data_category$/, @data_categories ) ) {
-    $subdirs = catdir(
-      $self->param_required('genome_uuid'),
-      #$self->param_required("${data_category}_dirname"), # uncommnet if subdirectory gene or genome needed
-      # $species_production_name,
-      # $assembly
-    );
-  }
+  my $subdirs = catdir($uuid_prefix, $genome_uuid);
 
-  my $output_dir = catdir(
-    $dump_dir,
-    $subdirs
-  );
-
-  my $web_dir = catdir(
-    $dump_dir,
-    $subdirs
-    #$web_dirname
-  );
+  my $output_dir = catdir($dump_dir, $subdirs);
+  my $web_dir    = catdir($dump_dir, $subdirs);
 
   return ($output_dir, $web_dir);
 }
