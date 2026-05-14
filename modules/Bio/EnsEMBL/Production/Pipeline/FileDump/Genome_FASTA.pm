@@ -210,18 +210,18 @@ sub hardmask {
 sub blast_index {
   my ($self, $filename, $dbtype) = @_;
 
-  my $web_dir = $self->param_required('web_dir');
-  my $blast_dirname = $self->param_required('blast_dirname');
+  my $web_dir  = $self->param_required('web_dir');
+  my $basename = path($filename)->basename;
+  $basename    =~ s/\.fa$//;
 
-  my $blast_filename = catdir(
-    $web_dir,
-    #$blast_dirname,
-    #'genomes',
-    path($filename)->basename
-  );
+  my $blast_filename = catdir($web_dir, $basename);
   path($blast_filename)->parent->mkpath();
 
-  $self->create_blast_index($filename, $blast_filename, $dbtype);
+  # Rename FASTA to strip .fa extension
+  rename($filename, $blast_filename)
+    or $self->throw("Cannot rename $filename to $blast_filename: $!");
+
+  $self->create_blast_index($blast_filename, $blast_filename, $dbtype);
 }
 
 1;

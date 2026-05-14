@@ -215,24 +215,20 @@ sub header {
 sub blast_index {
   my ($self, $filename, $dbtype) = @_;
 
-  my $web_dir = $self->param_required('web_dir');
-  my $blast_dirname = $self->param_required('blast_dirname');
+  my $web_dir   = $self->param_required('web_dir');
   my $file_type = $self->param_required('file_type');
+  my $basename  = path($filename)->basename;
+  $basename     =~ s/\.fa$//;
+  # Strip geneset version from name
+  $basename     =~ s/\-[^-]+(\-[^-]+)$/$1/;
 
-  # New genesets should overwrite old ones; so remove the
-  # geneset version from the name.
-  my $basename = path($filename)->basename;
-  $basename =~ s/\-[^-]+(\-[^-]+\.$file_type)$/$1/;
-
-  my $blast_filename = catdir(
-    $web_dir,
-    #$blast_dirname,
-    #'genes',
-    $basename
-  );
+  my $blast_filename = catdir($web_dir, $basename);
   path($blast_filename)->parent->mkpath();
 
-  $self->create_blast_index($filename, $blast_filename, $dbtype);
+  rename($filename, $blast_filename)
+    or $self->throw("Cannot rename $filename to $blast_filename: $!");
+
+  $self->create_blast_index($blast_filename, $blast_filename, $dbtype);
 }
 
 1;
