@@ -160,12 +160,46 @@ sub generate_checksums {
   foreach my $file (sort {$a cmp $b} @{$files}) {
     my $target = File::Spec->catfile($dir, $file);
     next if ! -f $target; # skip if the file was removed
-    my $checksum = `sum $target`;
-    chomp($checksum);
+
+    # Call the external 'sum' program and parse its output so we don't
+    # include the absolute path returned by sum. sum typically prints:
+    # "<checksum> <blocks> <filename>". We capture those fields and
+    # reformat the CHECKSUMS entry to include only the checksum, block
+    # count and the basename.
+    my $sum_output = `sum $target 2>/dev/null`;
+    chomp($sum_output);
+
+    my ($sumval, $blocks, $path) = split /\s+/, $sum_output, 3;
     my $filename = basename($file);
-    print $fh "$checksum $filename\n";
+
+    if(defined $sumval && defined $blocks) {
+      print $fh "$sumval $blocks $filename\n";
+    }
+    else {
+      # sum failed or returned unexpected output; skip this file to avoid
+      # writing absolute paths into the CHECKSUMS file.
+      warn "sum failed for $target; skipping\n";
+      next;
+    }
   }
   close $fh or die "Cannot close $checksum_file: $!";
+
+  # Validate that each non-empty line in the generated CHECKSUMS file has
+  # exactly three whitespace-separated columns (checksum, blocks, filename).
+  open my $check_fh, '<', $checksum_file or die "Cannot open $checksum_file for validation: $!";
+  my $line_no = 0;
+  while (my $line = <$check_fh>) {
+    $line_no++;
+    chomp $line;
+    next if $line =~ /^\s*$/; # skip empty lines
+    my @cols = split /\s+/, $line;
+    if (scalar @cols != 3) {
+      close $check_fh;
+      unlink $checksum_file; # remove malformed file
+      die "Malformed CHECKSUMS file '$checksum_file' at line $line_no: expected 3 columns but found " . scalar(@cols) . "\n";
+    }
+  }
+  close $check_fh or die "Cannot close $checksum_file after validation: $!";
 
   chmod S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH, $checksum_file;
 
