@@ -28,7 +28,9 @@ use Pod::Usage;
 use File::Basename;
 
 my $OPTIONS = options();
+my $LOG_FH;
 run();
+close_log() if defined $LOG_FH;
 
 sub options {
   my $opts = {};
@@ -55,6 +57,40 @@ sub options {
   }
 
   return $opts;
+}
+
+sub open_log {
+  my $log_file = File::Spec->catfile($OPTIONS->{directory}, 'checksum_errors.log');
+  if (!open $LOG_FH, '>>', $log_file) {
+    warn "Cannot open log file '$log_file': $!\n";
+    return;
+  }
+  return;
+}
+
+sub close_log {
+  return unless defined $LOG_FH;
+  close $LOG_FH or warn "Cannot close log file: $!\n";
+  return;
+}
+
+sub log_error {
+  my ($msg) = @_;
+  my $timestamp = scalar(localtime);
+  open_log() unless defined $LOG_FH;
+  if (defined $LOG_FH) {
+    print $LOG_FH "[$timestamp] $msg\n";
+    flush_log();
+  }
+  return;
+}
+
+sub flush_log {
+  return unless defined $LOG_FH;
+  select($LOG_FH);
+  $| = 1;
+  select(STDOUT);
+  return;
 }
 
 sub run {
@@ -153,19 +189,88 @@ sub generate_checksums {
   my $files = $contents->{files};
   return if scalar(@{$files}) == 0;
   my $checksum_file = File::Spec->catfile($dir, 'CHECKSUMS');
+  
+  # Skip if CHECKSUMS is a symlink
+  if(-l $checksum_file) {
+    print STDERR "Skipping the checksum file $checksum_file as it is a symlink\n";
+    return;
+  }
+  
   if(-f $checksum_file) {
     print STDERR "Skipping the checksum file $checksum_file as it exists\n";
   }
-  open my $fh, '>', $checksum_file or die "Cannot open $checksum_file for writing: $!";
+  
+  if(!open my $fh, '>', $checksum_file) {
+    my $error_msg = "Cannot open $checksum_file for writing: $!";
+    warn "$error_msg\n";
+    log_error($error_msg);
+    return;
+  }
+  
   foreach my $file (sort {$a cmp $b} @{$files}) {
     my $target = File::Spec->catfile($dir, $file);
     next if ! -f $target; # skip if the file was removed
-    my $checksum = `sum $target`;
-    chomp($checksum);
+
+    # Call the external 'sum' program and parse its output so we don't
+    # include the absolute path returned by sum. sum typically prints:
+    # "<checksum> <blocks> <filename>". We capture those fields and
+    # reformat the CHECKSUMS entry to include only the checksum, block
+    # count and the basename.
+    my $sum_output = `sum $target 2>/dev/null`;
+    chomp($sum_output);
+
+    my ($sumval, $blocks, $path) = split /\s+/, $sum_output, 3;
     my $filename = basename($file);
-    print $fh "$checksum $filename\n";
+
+    if(defined $sumval && defined $blocks) {
+      print $fh "$sumval $blocks $filename\n";
+    }
+    else {
+      # sum failed or returned unexpected output; skip this file to avoid
+      # writing absolute paths into the CHECKSUMS file.
+      warn "sum failed for $target; skipping\n";
+      next;
+    }
   }
-  close $fh or die "Cannot close $checksum_file: $!";
+  
+  if(!close $fh) {
+    my $error_msg = "Cannot close $checksum_file: $!";
+    warn "$error_msg\n";
+    log_error($error_msg);
+    return;
+  }
+
+  # Validate that each non-empty line in the generated CHECKSUMS file has
+  # exactly three whitespace-separated columns (checksum, blocks, filename).
+  if(!open my $check_fh, '<', $checksum_file) {
+    my $error_msg = "Cannot open $checksum_file for validation: $!";
+    warn "$error_msg\n";
+    log_error($error_msg);
+    return;
+  }
+  
+  my $line_no = 0;
+  while (my $line = <$check_fh>) {
+    $line_no++;
+    chomp $line;
+    next if $line =~ /^\s*$/; # skip empty lines
+    my @cols = split /\s+/, $line;
+    if (scalar @cols != 3) {
+      close $check_fh;
+      unlink $checksum_file; # remove malformed file
+      my $error_msg = "Malformed CHECKSUMS file '$checksum_file' at line $line_no: expected 3 columns but found " . scalar(@cols);
+      warn "$error_msg\n";
+      log_error($error_msg);
+      return;
+    }
+  }
+  
+  if(!close $check_fh) {
+    my $error_msg = "Cannot close $checksum_file after validation: $!";
+    warn "$error_msg\n";
+    log_error($error_msg);
+    return;
+  }
 
   chmod S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH, $checksum_file;
 
