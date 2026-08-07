@@ -28,7 +28,9 @@ use Pod::Usage;
 use File::Basename;
 
 my $OPTIONS = options();
+my $LOG_FH;
 run();
+close_log() if defined $LOG_FH;
 
 sub options {
   my $opts = {};
@@ -55,6 +57,40 @@ sub options {
   }
 
   return $opts;
+}
+
+sub open_log {
+  my $log_file = File::Spec->catfile($OPTIONS->{directory}, 'checksum_errors.log');
+  if (!open $LOG_FH, '>>', $log_file) {
+    warn "Cannot open log file '$log_file': $!\n";
+    return;
+  }
+  return;
+}
+
+sub close_log {
+  return unless defined $LOG_FH;
+  close $LOG_FH or warn "Cannot close log file: $!\n";
+  return;
+}
+
+sub log_error {
+  my ($msg) = @_;
+  my $timestamp = scalar(localtime);
+  open_log() unless defined $LOG_FH;
+  if (defined $LOG_FH) {
+    print $LOG_FH "[$timestamp] $msg\n";
+    flush_log();
+  }
+  return;
+}
+
+sub flush_log {
+  return unless defined $LOG_FH;
+  select($LOG_FH);
+  $| = 1;
+  select(STDOUT);
+  return;
 }
 
 sub run {
@@ -153,10 +189,24 @@ sub generate_checksums {
   my $files = $contents->{files};
   return if scalar(@{$files}) == 0;
   my $checksum_file = File::Spec->catfile($dir, 'CHECKSUMS');
+  
+  # Skip if CHECKSUMS is a symlink
+  if(-l $checksum_file) {
+    print STDERR "Skipping the checksum file $checksum_file as it is a symlink\n";
+    return;
+  }
+  
   if(-f $checksum_file) {
     print STDERR "Skipping the checksum file $checksum_file as it exists\n";
   }
-  open my $fh, '>', $checksum_file or die "Cannot open $checksum_file for writing: $!";
+  
+  if(!open my $fh, '>', $checksum_file) {
+    my $error_msg = "Cannot open $checksum_file for writing: $!";
+    warn "$error_msg\n";
+    log_error($error_msg);
+    return;
+  }
+  
   foreach my $file (sort {$a cmp $b} @{$files}) {
     my $target = File::Spec->catfile($dir, $file);
     next if ! -f $target; # skip if the file was removed
@@ -182,11 +232,23 @@ sub generate_checksums {
       next;
     }
   }
-  close $fh or die "Cannot close $checksum_file: $!";
+  
+  if(!close $fh) {
+    my $error_msg = "Cannot close $checksum_file: $!";
+    warn "$error_msg\n";
+    log_error($error_msg);
+    return;
+  }
 
   # Validate that each non-empty line in the generated CHECKSUMS file has
   # exactly three whitespace-separated columns (checksum, blocks, filename).
-  open my $check_fh, '<', $checksum_file or die "Cannot open $checksum_file for validation: $!";
+  if(!open my $check_fh, '<', $checksum_file) {
+    my $error_msg = "Cannot open $checksum_file for validation: $!";
+    warn "$error_msg\n";
+    log_error($error_msg);
+    return;
+  }
+  
   my $line_no = 0;
   while (my $line = <$check_fh>) {
     $line_no++;
@@ -196,10 +258,19 @@ sub generate_checksums {
     if (scalar @cols != 3) {
       close $check_fh;
       unlink $checksum_file; # remove malformed file
-      die "Malformed CHECKSUMS file '$checksum_file' at line $line_no: expected 3 columns but found " . scalar(@cols) . "\n";
+      my $error_msg = "Malformed CHECKSUMS file '$checksum_file' at line $line_no: expected 3 columns but found " . scalar(@cols);
+      warn "$error_msg\n";
+      log_error($error_msg);
+      return;
     }
   }
-  close $check_fh or die "Cannot close $checksum_file after validation: $!";
+  
+  if(!close $check_fh) {
+    my $error_msg = "Cannot close $checksum_file after validation: $!";
+    warn "$error_msg\n";
+    log_error($error_msg);
+    return;
+  }
 
   chmod S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH, $checksum_file;
 
