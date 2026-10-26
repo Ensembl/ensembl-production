@@ -167,49 +167,71 @@ sub header {
     );
   }
 
+  # fasta_header_prefix is only set for blast dumps; FTP dump headers stay unquoted
+  my $blast_header = $self->param_is_defined('fasta_header_prefix');
+  my $quote = sub {
+    my ($value) = @_;
+    return $blast_header ? qq{"$value"} : $value;
+  };
+
   my $gene = $transcript->get_Gene;
 
-  push @attributes, 'gene:'.$gene->stable_id_version;
+  push @attributes, 'gene:'.$quote->($gene->stable_id_version);
 
   if ($seq_type eq 'pep') {
-    push @attributes, 'transcript:'.$transcript->stable_id_version;
+    push @attributes, 'transcript:'.$quote->($transcript->stable_id_version);
   }
 
-  push @attributes, 'gene_biotype:'.$gene->biotype;
-  push @attributes, 'transcript_biotype:'.$transcript->biotype;
+  push @attributes, 'gene_biotype:'.$quote->($gene->biotype);
+  push @attributes, 'transcript_biotype:'.$quote->($transcript->biotype);
 
   my $xref = $gene->display_xref;
   if (defined $xref && defined $xref->display_id) {
-    push @attributes, 'gene_symbol:'.$xref->display_id;
+    push @attributes, 'gene_symbol:'.$quote->($xref->display_id);
   }
 
   my $desc = $gene->description;
   if (defined $desc) {
-    push @attributes, 'description:"'.$gene->description.'"';
+    push @attributes, 'description:"'.$desc.'"';
   }
 
 
   #set header prefix with ENSEMBL for blast files
   my $prefix = '';
 
-  if ($self->param_is_defined('fasta_header_prefix')){
-    
+  if ($blast_header){
+
     $prefix = $self->param('fasta_header_prefix');
 
-    #add addition attributes version & is_canonical for fata header only 
-    if ($seq_type eq 'cdna' || $seq_type eq 'cds' || $seq_type eq 'pep' ) {
-      push @attributes, 'gene_version:'.$gene->version;
-      push @attributes, 'transcript_version:'.$transcript->version;
-      push @attributes, 'is_canonical:'.$transcript->is_canonical();
-    } 
+    #add version & is_canonical attributes for blast fasta headers only; versions are nullable in core, so default to 0
+    push @attributes, 'gene_version:'.($gene->version // 0);
+    push @attributes, 'transcript_version:'.($transcript->version // 0);
+    push @attributes, 'is_canonical:'.($transcript->is_canonical ? 1 : 0);
+
     if ($seq_type eq 'pep') {
-      push @attributes, 'translation_version:'.$transcript->translation->version;
+      push @attributes, 'translation_version:'.($transcript->translation->version // 0);
     }
+
+    push @attributes, 'subgenome:'.$quote->($self->subgenome($transcript->slice));
 
   }
 
 
   return $prefix . join(' ', @attributes);
+}
+
+sub subgenome {
+  my ($self, $slice) = @_;
+
+  # genome_component is a seq_region attribute, so look it up once per seq_region;
+  # a region can belong to several subgenomes, which are comma separated
+  my $name = $slice->seq_region_name;
+  if (! exists $self->{subgenome}{$name}) {
+    my %components = map { $_->value => 1 } @{ $slice->get_all_Attributes('genome_component') };
+    $self->{subgenome}{$name} = join(',', sort keys %components);
+  }
+
+  return $self->{subgenome}{$name};
 }
 
 sub blast_index {
