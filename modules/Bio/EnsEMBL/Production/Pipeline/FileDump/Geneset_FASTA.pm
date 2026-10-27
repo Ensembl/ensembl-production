@@ -58,6 +58,10 @@ sub run {
 
   my $dba = $self->dba;
 
+  # subgenomes are only looked up for genomes with a ploidy meta key
+  my $ploidy = $dba->get_MetaContainer->list_value_by_key('ploidy');
+  $self->param('has_ploidy', scalar(@$ploidy) ? 1 : 0);
+
   my ($chr, $non_chr, $non_ref) = $self->get_slices($dba);
 
   my $cdna_filename = $$filenames{'cdna'};
@@ -222,6 +226,8 @@ sub header {
 
 sub subgenome {
   my ($self, $slice) = @_;
+
+  return '' unless $self->param('has_ploidy');
 
   # genome_component is a seq_region attribute, so look it up once per seq_region;
   # a region can belong to several subgenomes, which are comma separated
