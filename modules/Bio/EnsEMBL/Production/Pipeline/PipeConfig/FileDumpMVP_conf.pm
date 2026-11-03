@@ -260,7 +260,8 @@ sub pipeline_analyses {
             -rc_name           => '16GB_D',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-               '2' => [ 'FAAbgzip' ],
+		'2->A' => [ 'FAAbgzip'],
+		'A->2' => [ 'Compress_File' ],
             },
         },
         {
@@ -278,7 +279,8 @@ sub pipeline_analyses {
             },
             -rc_name           => '32GB_D',
             -flow_into       => {
-               '2' => [ 'FAAbgzip' ],
+               '2->A' => [ 'FAAbgzip'],
+	       'A->2' => [ 'Compress_File' ],
             },
         },
         {
@@ -292,10 +294,6 @@ sub pipeline_analyses {
             -hive_capacity => 10,
             -analysis_capacity => 5,
             -rc_name           => '8GB_D',
-            -flow_into     => {
-                #TODO: trigger_next_step not declared  2 => WHEN('#trigger_next_step# == 1' => 'UpdateDatasetAttribute'),
-                3 => [ 'Compress_File' ],
-            },
         },
         {
             -logic_name      => 'Chromosome_TSV',
@@ -351,7 +349,8 @@ sub pipeline_analyses {
             -rc_name         => '16GB_D',
             -flow_into       => {
                 '-1' => [ 'Geneset_FASTA_mem' ],
-                '2'  => [ 'Compress_File' ]
+		'2->A' => [ 'FAAbgzip'],
+		'A->2' => [ 'Compress_File' ],
             },
         },
         {
@@ -366,7 +365,9 @@ sub pipeline_analyses {
             },
             -rc_name           => '32GB_D',
             -flow_into       => {
-                '2' => [ 'Compress_File' ]
+                '2->A' => [ 'FAAbgzip'],
+		'A->2' => [ 'Compress_File' ],
+
             },
         },
                 {
@@ -383,7 +384,7 @@ sub pipeline_analyses {
             -rc_name           => '16GB_D',
             -flow_into       => {
                 '-1'   => [ 'Geneset_GFF3_mem' ],
-                '2->A' => [ 'GFFbgzip' ],
+                '2->A' => [ 'GFF_GTFbgzip' ],
                 'A->2' => [ 'Compress_File' ],
             },
         },
@@ -400,12 +401,12 @@ sub pipeline_analyses {
             },
             -rc_name           => '32GB_D',
             -flow_into       => {
-                '2->A' => [ 'GFFbgzip' ],
+                '2->A' => [ 'GFF_GTFbgzip' ],
                 'A->2' => [ 'Compress_File' ],
             },
         },
         {
-            -logic_name    => 'GFFbgzip',
+            -logic_name    => 'GFF_GTFbgzip',
             -module        => 'ensembl.production.hive.filedumps.GFFbgzip',
             -language      => 'python3',
             -parameters    => {
@@ -485,7 +486,8 @@ sub pipeline_analyses {
             -rc_name           => '16GB_D',
             -flow_into       => {
                 '-1' => [ 'Geneset_GTF_mem' ],
-                '2'  => [ 'Compress_File' ],
+		'2->A' => [ 'GFF_GTFbgzip' ],
+		'A->2'  => [ 'Compress_File' ],
             },
         },
         {
@@ -502,7 +504,8 @@ sub pipeline_analyses {
             },
             -rc_name           => '32GB_D',
             -flow_into       => {
-                '2' => [ 'Compress_File' ]
+                '2->A' => [ 'GFF_GTFbgzip' ],
+                'A->2'  => [ 'Compress_File' ],
             },
         },
         {
