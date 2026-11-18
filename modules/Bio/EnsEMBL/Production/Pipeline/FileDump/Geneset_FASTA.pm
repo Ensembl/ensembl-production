@@ -192,6 +192,8 @@ sub header {
   my $xref = $gene->display_xref;
   if (defined $xref && defined $xref->display_id) {
     push @attributes, 'gene_symbol:'.$quote->($xref->display_id);
+  } elsif ($blast_header) {
+    push @attributes, 'gene_symbol:""';
   }
 
   my $desc = $gene->description;
