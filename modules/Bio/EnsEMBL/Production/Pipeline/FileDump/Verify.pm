@@ -53,11 +53,15 @@ sub run {
   push @errors, map { "Broken symlink: $_" } split(/\n/, $broken_symlink);
 
   if ($check_unzipped) {
-    my $unzipped_file_cmd = "find '$output_dir' -type f ! -name 'README' ! -name 'CHECKSUMS' ! -name 'md5sum.txt' ! -name '*.gz*'";
+    my $unzipped_file_cmd = "find '$output_dir' -type f ! -name 'README' ! -name 'CHECKSUMS' ! -name 'md5sum.txt' ! -name '*.bgz*' ! -name '*.gz*' ! -name '*.csi'";
     my (undef, $unzipped_file) = $self->run_cmd($unzipped_file_cmd);
     push @errors, map { "Unzipped file: $_" } split(/\n/, $unzipped_file);
   }
-
+  if (index($output_dir, "geneset") != -1) {
+    my $unsorted_file_cmd = "zless $output_dir/genes.gff3.bgz | tail -n1 | grep gennome- | tee";
+    my (undef, $unsorted_file) = $self->run_cmd($unsorted_file_cmd);
+    push @errors, map { "Unsorted file: $_" } split(/\n/, $unsorted_file);
+  }
   if (scalar(@errors)) {
     $self->throw(join("\n", @errors));
   }
